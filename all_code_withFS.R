@@ -183,6 +183,56 @@ water_distance@data@names<-"Distance_to_water"
 landscapes<-stack(Soil,Veg,Land_use,ss,gs,Cat,depth_k,water_distance)
 names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance")
 
+## set the parameters for mlr
+seed=35
+set.seed(seed)
+reg_rf = makeLearner("regr.randomForest")
+#reg_rf$par.vals<-list(importance=T)
+
+class_rf = makeLearner("classif.randomForest")
+#class_rf$par.vals<-list(importance=T)
+ctrl = makeFeatSelControlSequential(method = "sffs", alpha = 0.02)
+
+rdesc = makeResampleDesc("CV", iters = 5)
+
+## define the parameter spaces for RF
+para_rf = makeParamSet(
+  makeDiscreteParam("ntree", values=seq(200,800,10)),
+  makeIntegerParam("nodesize", lower = 3, upper = 8),
+  makeIntegerParam("mtry", lower = 2, upper = 8)
+)
+
+model_build <- function(dataset, n_target, method) {
+  set.seed(35)
+  if (method == "reg") {
+    ## define the regression task for DON 
+    WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
+    ## cross validation
+    ## 10-fold cross-validation
+    rin = makeResampleInstance(rdesc, task = WP3_target)
+    ## tune the parameters for rf and xgboost
+    res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+                             show.info = FALSE, measures = rsq)
+    
+    ## set the hyperparameter for rf and xgboost 
+    lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
+    
+  } else {
+    ## define the regression task for DON 
+    WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
+    ## cross validation
+    ## 10-fold cross-validation
+    rin = makeResampleInstance(rdesc, task = WP3_target)
+    res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+                             show.info = FALSE, measures = acc)
+    lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
+  }
+  
+  ## train the final model 
+  set.seed(35)
+  rf <- mlr::train(lrn_rf, WP3_target)
+  return(rf)
+}
 
 ## load the data 
 all_results<-data.frame()
@@ -193,7 +243,7 @@ all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 
-  tt=13 
+  tt=13
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -378,6 +428,52 @@ extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
+  set.seed(seeds)
+  DON_rf_ori<-model_build(M4_train_withKN[,c(9,12)],"DON","reg")
+  
+  ## map3 predict accuracy
+  ori_predict<-predict(DON_rf_ori,newdata=M4_test_withKN[,c(8:12)]) %>% reclass4(.[,"data"],0.5,1.0)
+
+  original_acc <- postResample(ori_predict[,1],ori_predict[,2])[1]
+
+  ## build without any v --> p2 
+  v_list_train<-list(M4_train_withKN[,c(1:8,10,11,13:15])
+  v_list_test<-list(M4_test_withKN[,c(1:8,10,11,13:15])
+
+  ## get R2
+
+ training_FS<-M4_train_withKN[,c(9,12)]
+ testing_FS<-M4_test_withKN[,c(9,12)]
+
+for (ii in seq(1, length(v_list_train), 1)) {
+
+  ## add v1-->calculate the r2 
+  training <- cbind(training_FS,v_list_train[[ii]])
+  testing <-  cbind(testing_FS,v_list_test[[ii]])
+  ## build the model 
+  set.seed(35)
+  rf <- model_build(training,"DON","reg")
+  ## test in testing set
+  pred_rf = predict(rf, newdata = testing) %>% reclass4(.[,"data"],0.5,1.0)
+  ## get the prediction performance
+  sing_acc = postResample(pred_rf[,1], pred_rf[,2])[1]
+  
+  threshold=0.02
+  if (sing_acc-original_acc>threshold) {
+    training_FS <- training
+    testing_FS <- testing
+    print("Improved")
+    print(colnames(v_list_train[[i]])[2])
+    print(sing_acc)
+    original_acc<-sing_acc
+  } else {
+    print("Not improved")
+    print(original_acc)
+  }
+  ## improve r2 keep it 
+  ## otherwise left it and run the next selection 
+}
+
 
   #in_withKN <- reclass(M4_train_withKN,0.6,1.2)
   #M4_test_withKN <- reclass(M4_test_withKN,0.6,1.2)
@@ -386,29 +482,23 @@ extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
   #M4_test_withKN <- reclass3(M4_test_withKN,0.6,1.2)
  
   ## 
-## set the parameters for mlr
-seed=35
-set.seed(seed)
-reg_rf = makeLearner("regr.randomForest")
-#reg_rf$par.vals<-list(importance=T)
 
-class_rf = makeLearner("classif.randomForest")
-#class_rf$par.vals<-list(importance=T)
-## define the parameter spaces for RF
-    ## define the regression task for DON 
-  WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-    
-  ## Specify the search strategy
-  ctrl = makeFeatSelControlSequential(method = "sffs", alpha = 0.02)
-
-  ## Select features
-  rdesc = makeResampleDesc("CV", iters = 5)
-  sfeats = selectFeatures(learner = reg_rf, task = WP3_target, resampling = rdesc, control = ctrl,
-  show.info = FALSE)
-  sfeats
+  set.seed(seeds)
+  DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
+  
+  ## map3 predict accuracy
+  map4_predict<-predict(DON_rf_m4,newdata=M4_test_withKN)
+  
   #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
   #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
   
+  print(postResample(map4_predict$data$response,map4_predict$data$truth))
+  
+  predict_results<-data.frame(seeds,map4_predict$data)
+  
+  all_results<-rbind(all_results,predict_results)
+  
+}
 
 
 dim(all_results)
