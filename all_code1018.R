@@ -191,11 +191,9 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
+ctrl = makeFeatSelControlSequential(method = "sffs", alpha = 0.02)
 
 rdesc = makeResampleDesc("CV", iters = 5)
-
-## define the parameters search mehtods
-ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
 ## define the parameter spaces for RF
 para_rf = makeParamSet(
@@ -431,8 +429,6 @@ for (tt in c(1,2,3,13)){
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5)]
 
   #in_withKN <- reclass(M4_train_withKN,0.6,1.2)
   #M4_test_withKN <- reclass(M4_test_withKN,0.6,1.2)
