@@ -180,8 +180,8 @@ water_distance <- raster::mask(distance(water),study_area)
 water_distance@data@names<-"Distance_to_water"
 #plot(water_distance)
 ## load the data 
-landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance)
-names(landscapes) <- c("Soil", "Veg", "Landuse", "Catchment", "GW_depth", "Distance")
+landscapes<-stack(Soil,Veg,Land_use,ss,gs,Cat,depth_k,water_distance)
+names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance")
 
 ## set the parameters for mlr
 seed=35
