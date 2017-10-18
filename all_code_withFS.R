@@ -243,7 +243,7 @@ all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 
-  tt=13
+  tt=1
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -435,14 +435,21 @@ extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
     M4_test_withKN[,l]=(M4_test_withKN[,l]-mean_train)/sd_train
   }
   
+  M4_train_withKN <- reclass(M4_train_withKN,0.6,1.2)
+  M4_test_withKN <- reclass(M4_test_withKN,0.6,1.2)
+  
+  M4_train_withKN <- reclass3(M4_train_withKN,0.6,1.2)
+  M4_test_withKN <- reclass3(M4_test_withKN,0.6,1.2)
+  
+  
   set.seed(seeds)
-  DON_rf_ori<-model_build(M4_train_withKN[,c(9,12)],"DON","reg")
+  DON_rf_ori<-model_build(M4_train_withKN[,c(9,12)],"DON","cla")
   
   ## map3 predict accuracy
   ori_predict<-predict(DON_rf_ori,newdata=M4_test_withKN[,c(9,12)]) 
-  ori_predict<-reclass4(ori_predict$data,0.5,1.0)
+  #ori_predict<-reclass4(ori_predict$data,0.5,1.0)
 
-  original_acc <- postResample(ori_predict[,2],ori_predict[,1])[1]
+  original_acc <- postResample(ori_predict$data$response,ori_predict$data$truth)[1]
   original_acc
   ## build without any v --> p2 
   v_list_train<-M4_train_withKN[,c(1:8,10,11,13:15)]
@@ -464,19 +471,19 @@ for (ii in seq(1, length(v_list_train), 1)) {
   
   ## build the model 
   set.seed(35)
-  rf <- model_build(training,"DON","reg")
+  rf <- model_build(training,"DON","cla")
   ## test in testing set
   pred_rf = predict(rf, newdata = testing)
-  pred_rf<- reclass4(pred_rf$data,0.5,1.0)
+  #pred_rf<- reclass4(pred_rf$data,0.5,1.0)
   ## get the prediction performance
-  sing_acc = postResample(pred_rf[,2], pred_rf[,1])[1]
+  sing_acc = postResample(pred_rf$data$response, pred_rf$data$truth)[1]
   
   threshold=0.02
   if (sing_acc-original_acc>threshold) {
     training_FS <- training
     testing_FS <- testing
     print("Improved")
-    print(colnames(v_list_train[[i]])[2])
+    print(names(v_list_train[ii]))
     print(sing_acc)
     original_acc<-sing_acc
   } else {
@@ -488,7 +495,7 @@ for (ii in seq(1, length(v_list_train), 1)) {
 }
 
 
-  #in_withKN <- reclass(M4_train_withKN,0.6,1.2)
+  #M4_train_withKN <- reclass(M4_train_withKN,0.6,1.2)
   #M4_test_withKN <- reclass(M4_test_withKN,0.6,1.2)
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.6,1.2)
