@@ -191,7 +191,7 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeFeatSelControlSequential(method = "sffs", alpha = 0.02)
+ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
 
@@ -428,35 +428,48 @@ extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
+  for (l in c(1:8,10:15)){
+    mean_train<-mean(M4_train_withKN[,l])
+    sd_train<-sd(M4_train_withKN[,l])
+    M4_train_withKN[,l]=(M4_train_withKN[,l]-mean_train)/sd_train
+    M4_test_withKN[,l]=(M4_test_withKN[,l]-mean_train)/sd_train
+  }
+  
   set.seed(seeds)
   DON_rf_ori<-model_build(M4_train_withKN[,c(9,12)],"DON","reg")
   
   ## map3 predict accuracy
-  ori_predict<-predict(DON_rf_ori,newdata=M4_test_withKN[,c(8:12)]) %>% reclass4(.[,"data"],0.5,1.0)
+  ori_predict<-predict(DON_rf_ori,newdata=M4_test_withKN[,c(9,12)]) 
+  ori_predict<-reclass4(ori_predict$data,0.5,1.0)
 
-  original_acc <- postResample(ori_predict[,1],ori_predict[,2])[1]
-
+  original_acc <- postResample(ori_predict[,2],ori_predict[,1])[1]
+  original_acc
   ## build without any v --> p2 
-  v_list_train<-list(M4_train_withKN[,c(1:8,10,11,13:15])
-  v_list_test<-list(M4_test_withKN[,c(1:8,10,11,13:15])
-
+  v_list_train<-M4_train_withKN[,c(1:8,10,11,13:15)]
+  v_list_test<-M4_test_withKN[,c(1:8,10,11,13:15)]
+  
   ## get R2
 
  training_FS<-M4_train_withKN[,c(9,12)]
  testing_FS<-M4_test_withKN[,c(9,12)]
-
+ 
 for (ii in seq(1, length(v_list_train), 1)) {
 
   ## add v1-->calculate the r2 
-  training <- cbind(training_FS,v_list_train[[ii]])
-  testing <-  cbind(testing_FS,v_list_test[[ii]])
+  training <- cbind(training_FS,v_list_train[,ii])
+  testing <-  cbind(testing_FS,v_list_test[,ii])
+  
+  names(training)[length(training)]<-names(v_list_train)[ii]
+  names(testing)[length(testing)]<-names(v_list_test)[ii]
+  
   ## build the model 
   set.seed(35)
   rf <- model_build(training,"DON","reg")
   ## test in testing set
-  pred_rf = predict(rf, newdata = testing) %>% reclass4(.[,"data"],0.5,1.0)
+  pred_rf = predict(rf, newdata = testing)
+  pred_rf<- reclass4(pred_rf$data,0.5,1.0)
   ## get the prediction performance
-  sing_acc = postResample(pred_rf[,1], pred_rf[,2])[1]
+  sing_acc = postResample(pred_rf[,2], pred_rf[,1])[1]
   
   threshold=0.02
   if (sing_acc-original_acc>threshold) {
@@ -484,43 +497,15 @@ for (ii in seq(1, length(v_list_train), 1)) {
   ## 
 
   set.seed(seeds)
-  DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
+  DON_rf_m4<-model_build(training_FS,"DON","reg")
   
   ## map3 predict accuracy
-  map4_predict<-predict(DON_rf_m4,newdata=M4_test_withKN)
+  map4_predict<-predict(DON_rf_m4,newdata=testing_FS)
   
+  pred_rf<- reclass4(map4_predict$data,0.5,1.0)
+  ## get the prediction performance
+  sing_acc = postResample(pred_rf[,2], pred_rf[,1])[1]
+  print(sing_acc)
   #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
   #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
   
-  print(postResample(map4_predict$data$response,map4_predict$data$truth))
-  
-  predict_results<-data.frame(seeds,map4_predict$data)
-  
-  all_results<-rbind(all_results,predict_results)
-  
-}
-
-
-dim(all_results)
-
-seeds<-unique(all_results$seeds)
-length(seeds)
-
-
-all_acc<-data.frame()
-
-for (qq in seeds){
-  print(qq)
-  sub_data<-subset(all_results,all_results$seeds==qq)   
-  #p1<-reclass4(sub_data[,c(3,2)],0.5,1.0)
-  #p2<-reclass4(sub_data[,c(5,4)],0.5,1.0)
-  p4<-reclass4(sub_data[,c(3,2)],0.5,1.0)
-  print(table(p4[,2]))
-  # print(table(p2[,2]))
-  #  print(table(p4[,2]))
-  sing_acc<-data.frame(p4=postResample(p4[,1],p4[,2])[1])
-  
-  all_acc<-rbind(all_acc,sing_acc)
-}
-
-print(all_acc)
