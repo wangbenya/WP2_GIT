@@ -429,7 +429,6 @@ for (tt in c(1,2,3,13)){
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-
   #in_withKN <- reclass(M4_train_withKN,0.6,1.2)
   #M4_test_withKN <- reclass(M4_test_withKN,0.6,1.2)
   
@@ -439,6 +438,15 @@ for (tt in c(1,2,3,13)){
   ## 
    M4_test_withKN<-M4_test_withKN[,-c(4,5)]
 
+  M4_train_withKN$soil_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Soil
+  M4_train_withKN$veg_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Veg
+  M4_train_withKN$land_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Landuse
+  M4_train_withKN$cat_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Catchment
+
+  M4_test_withKN$soil_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Soil
+  M4_test_withKN$veg_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Veg
+  M4_test_withKN$land_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Landuse
+  M4_test_withKN$cat_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Catchment
 
   set.seed(seeds)
   DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
