@@ -438,16 +438,9 @@ for (tt in c(1,2,3,13)){
   ## 
    M4_test_withKN<-M4_test_withKN[,-c(4,5)]
 
-  M4_train_withKN$soil_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Soil
-  M4_train_withKN$veg_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Veg
-  M4_train_withKN$land_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Landuse
-  M4_train_withKN$cat_dep<-M4_train_withKN$GW_depth*M4_train_withKN$mean_DON_Catchment
-
-  M4_test_withKN$soil_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Soil
-  M4_test_withKN$veg_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Veg
-  M4_test_withKN$land_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Landuse
-  M4_test_withKN$cat_dep<-M4_test_withKN$GW_depth*M4_test_withKN$mean_DON_Catchment
-
+  M4_train_withKN$log_dep<-log10(M4_train_withKN$GW_depth)
+  M4_test_withKN$log_dep<-log10(M4_test_withKN$GW_depth)
+ 
   set.seed(seeds)
   DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
   
