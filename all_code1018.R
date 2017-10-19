@@ -191,7 +191,7 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeFeatSelControlSequential(method = "sffs", alpha = 0.02)
+ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
 
@@ -435,8 +435,10 @@ for (tt in c(1,2,3,13)){
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.6,1.2)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.6,1.2)
- 
+   M4_train_withKN<-M4_train_withKN[,-c(4,5)]
   ## 
+   M4_test_withKN<-M4_test_withKN[,-c(4,5)]
+
 
   set.seed(seeds)
   DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
