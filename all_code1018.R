@@ -193,7 +193,7 @@ class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
-rdesc = makeResampleDesc("CV", iters = 5)
+rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF
 para_rf = makeParamSet(
@@ -438,9 +438,6 @@ for (tt in c(1,2,3,13)){
   ## 
    M4_test_withKN<-M4_test_withKN[,-c(4,5)]
 
-  M4_train_withKN$log_dep<-log10(-M4_train_withKN$GW_depth)
-  M4_test_withKN$log_dep<-log10(-M4_test_withKN$GW_depth)
- 
   set.seed(seeds)
   DON_rf_m4<-model_build(M4_train_withKN,"DON","reg")
   
