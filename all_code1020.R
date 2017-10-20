@@ -276,6 +276,8 @@ for (tt in c(1:15)){
   values(map1) <- 10 ^ (values(map1))
   dat.krg_DON<-map1
   
+  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(map1, testing_points))
+
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points)
   landscape_test <- raster::extract(landscapes, testing_points)
@@ -361,10 +363,10 @@ for (tt in c(1:15)){
   
   
   #set.seed(seeds)
-  #rf_DON_m2 <- model_build(WP2Train, "DON","reg")
+  rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
-  #map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
-  #print(postResample(map2_predict$data$response, map2_predict$data$truth))
+  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+  print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
   # kriging for DOC
@@ -442,7 +444,7 @@ for (tt in c(1:15)){
   
   print(postResample(map4_predict$data$response,map4_predict$data$truth))
   
-  predict_results<-data.frame(seeds,map4_predict$data)
+  predict_results<-data.frame(seeds,map1_predict,map2_predict$data,map4_predict$data)
   
   all_results<-rbind(all_results,predict_results)
   
