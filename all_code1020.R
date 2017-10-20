@@ -240,7 +240,7 @@ set.seed(66)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-all_g<-read.csv("~WP2/data/all_g.csv",header=T)
+all_g<-read.csv("~/WP2/data/all_g.csv",header=T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 

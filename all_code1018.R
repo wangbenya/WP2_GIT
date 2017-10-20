@@ -193,7 +193,7 @@ class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
-rdesc = makeResampleDesc("CV", iters = 10)
+rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF
 para_rf = makeParamSet(
