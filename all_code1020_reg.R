@@ -287,7 +287,7 @@ map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster
   
 #}
 
-print(postResample(map1_predict[,2],map1_predict[,1])$overall)
+print(postResample(map1_predict[,2],map1_predict[,1]))
 
 
   ## M2, using RF to predict the DON
