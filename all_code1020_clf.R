@@ -187,10 +187,10 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
-#reg_rf$par.vals<-list(importance=T)
+reg_rf$par.vals<-list(importance=T)
 
 class_rf = makeLearner("classif.randomForest")
-#class_rf$par.vals<-list(importance=T)
+class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
@@ -240,7 +240,7 @@ set.seed(66)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-all_g<-read.csv("~/WP2/data/all_g.csv",header=T)
+all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 
@@ -281,7 +281,7 @@ for (tt in c(1:10)){
 
 for (t in c(1,2)){
   map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 1.5] <- "Medium"
+  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
@@ -373,10 +373,13 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,0.5,1.5)
-  WP2Test<-reclass(WP2Test,0.5,1.5)
-
-  #set.seed(seeds)
+  WP2Train<-reclass(WP2Train,0.5,1.0)
+  WP2Test<-reclass(WP2Test,0.5,1.0)
+  
+  WP2Train<-WP2Train[,-c(4,5)]
+  WP2Test<-WP2Test[,-c(4,5)]
+  
+  set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","clf")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
@@ -438,14 +441,19 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  M4_train_withKN <- reclass(M4_train_withKN,0.5,1.5)
-  M4_test_withKN <- reclass(M4_test_withKN,0.5,1.5)
   
-  M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.5)
-  M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.5)
+  ## create the training and testing sets 
+  ## build the model for map2
+  names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  
+  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
+  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
+  
+ # M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
+ # M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
   M4_train_withKN<-M4_train_withKN[,-c(4,5)]
-  ## 
   M4_test_withKN<-M4_test_withKN[,-c(4,5)]
   
   set.seed(seeds)
@@ -470,9 +478,9 @@ dim(all_results)
 
 seeds<-unique(all_results$seeds)
 length(seeds)
+all_acc<-data.frame()
 
-
-for (qq in seedss){
+for (qq in seeds){
   sub_data<-subset(all_results,all_results$seeds==qq)
   print(dim(sub_data))
   acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
