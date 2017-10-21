@@ -249,7 +249,7 @@ for (tt in c(1:10)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_g$DON, p = .8, list = FALSE)
+  trainIndex <- createDataPartition(all_g$DON, p = .75, list = FALSE)
   
   training <- all_g[trainIndex,]
   testing <- all_g[-trainIndex,]
@@ -281,7 +281,7 @@ for (tt in c(1:10)){
 
 for (t in c(1,2)){
   map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 1.5] <- "Medium"
+  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
@@ -373,8 +373,8 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,0.5,1.5)
-  WP2Test<-reclass(WP2Test,0.5,1.5)
+  WP2Train<-reclass(WP2Train,0.5,1.0)
+  WP2Test<-reclass(WP2Test,0.5,1.0)
 
   #set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","clf")
@@ -438,11 +438,11 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  M4_train_withKN <- reclass(M4_train_withKN,0.5,1.5)
-  M4_test_withKN <- reclass(M4_test_withKN,0.5,1.5)
+  M4_train_withKN <- reclass(M4_train_withKN,0.5,1.0)
+  M4_test_withKN <- reclass(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.5)
-  M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.5)
+  M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
+  M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
   M4_train_withKN<-M4_train_withKN[,-c(4,5)]
   ## 
@@ -471,8 +471,9 @@ dim(all_results)
 seeds<-unique(all_results$seeds)
 length(seeds)
 
+all_acc<-data.frame()
 
-for (qq in seedss){
+for (qq in seeds){
   sub_data<-subset(all_results,all_results$seeds==qq)
   print(dim(sub_data))
   acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
