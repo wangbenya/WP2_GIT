@@ -277,7 +277,7 @@ for (tt in c(1:10)){
   values(map1) <- 10 ^ (values(map1))
   dat.krg_DON<-map1
   
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(map1, testing_points))
+map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(map1, testing_points))
 
 #for (t in c(1,2)){
  # map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
@@ -287,7 +287,7 @@ for (tt in c(1:10)){
   
 #}
 
-print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
+print(postResample(map1_predict[,2],map1_predict[,1])$overall)
 
 
   ## M2, using RF to predict the DON
