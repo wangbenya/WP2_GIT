@@ -240,7 +240,7 @@ set.seed(66)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-all_g<-read.csv("~WP2/data/all_g.csv",header=T)
+all_g<-read.csv("~/WP2/data/all_g.csv",header=T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 
@@ -479,11 +479,11 @@ for (qq in seeds){
   sub_data<-subset(all_results,all_results$seeds==qq)   
   p1<-reclass4(sub_data[,c(3,2)],0.5,1.0)
   p2<-reclass4(sub_data[,c(5,4)],0.5,1.0)
-  p4<-reclass4(sub_data[,c(3,2)],0.5,1.0)
+  p4<-reclass4(sub_data[,c(7,6)],0.5,1.0)
   print(table(p1[,2]))
    print(table(p2[,2]))
     print(table(p4[,2]))
-  sing_acc<-data.frame(p4=postResample(p4[,1],p4[,2])[1])
+  sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
   
   all_acc<-rbind(all_acc,sing_acc)
 }
