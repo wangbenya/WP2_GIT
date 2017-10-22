@@ -384,7 +384,7 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","clf")
   
-  map2_predict <- predict(rf_DON_ma2, newdata = WP2Test)
+  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
