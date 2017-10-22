@@ -245,7 +245,7 @@ all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_TN<-read.csv("~/WP2_GIT/TN_extra.csv",header=T)
 extra_TN<-subset(extra_TN,extra_TN$value!="NA")
-
+names(extra_TN)<-c("TN")
 for (tt in c(1:10)){
   
   print(tt)
