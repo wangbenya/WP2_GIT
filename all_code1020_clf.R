@@ -273,11 +273,11 @@ for (tt in c(1:10)){
   # Compute the variogram model by passing the nugget, sill and range value
   dat.fit1 <- fit.variogram(var.smpl1, vgm(c("Exp","Sph","Gau","Lin","Spl")))
   # Perform the krige interpolation (note the use of the variogram model
-  map1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
-  values(map1) <- 10 ^ (values(map1))
-  dat.krg_DON<-map1
+  kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
+  values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
+  dat.krg_DON<-kriging_DON_m1
   
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(map1, testing_points))
+  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
 
 for (t in c(1,2)){
   map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
@@ -457,10 +457,10 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   M4_test_withKN<-M4_test_withKN[,-c(4,5,12)]
   
   set.seed(seeds)
-  DON_rf_m4<-model_build(M4_train_withKN,"DON","clf")
+  rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
   ## map3 predict accuracy
-  map4_predict<-predict(DON_rf_m4,newdata=M4_test_withKN)
+  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   
   #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
   #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
