@@ -187,10 +187,10 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
-reg_rf$par.vals<-list(importance=T)
+#reg_rf$par.vals<-list(importance=T)
 
 class_rf = makeLearner("classif.randomForest")
-class_rf$par.vals<-list(importance=T)
+#class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
@@ -199,7 +199,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,800,10)),
   makeIntegerParam("nodesize", lower = 3, upper = 8),
-  makeIntegerParam("mtry", lower = 2, upper = 8)
+  makeIntegerParam("mtry", lower = 4, upper = 12)
 )
 
 model_build <- function(dataset, n_target, method) {
@@ -453,8 +453,8 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
  # M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  # M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,14,15)]
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
