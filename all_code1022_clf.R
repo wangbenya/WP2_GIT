@@ -291,7 +291,6 @@ for (tt in c(1:5)){
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
 
 for (t in c(1,2)){
-<<<<<<< HEAD
   map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
   map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
