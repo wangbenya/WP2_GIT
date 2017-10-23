@@ -532,3 +532,10 @@ for (qq in seeds){
 }
 
 print(all_acc)
+
+all_acc2<-melt(all_acc,id="qq")
+lm1<-lm(value~variable,data=all_acc2) %>% aov(.) %>% TukeyHSD (.)
+print(lm1)
+
+
+
