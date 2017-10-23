@@ -186,10 +186,10 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.xgboost")
+reg_rf = makeLearner("regr.randomForest")
 #reg_rf$par.vals<-list(importance=T)
 
-class_rf = makeLearner("classif.xgboost")
+class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
@@ -474,8 +474,10 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
   landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
   
-  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
+  mm2 <- predict(rf_DON_m2, newdata = WP2Train)
+  
+  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN),m2=mm2$data$response)
+  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
@@ -491,8 +493,8 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,14,15)]
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
