@@ -492,10 +492,13 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
-  
+  M4_train_withKN$DON_c<-M4_train_withKN[,16]-M4_train_withKN[,12]-M4_train_withKN[,14]-M4_train_withKN[,15]
+  M4_test_withKN$DON_c<-M4_test_withKN[,16]-M4_test_withKN[,12]-M4_test_withKN[,14]-M4_test_withKN[,15]
+
   M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,14,15)]
   M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,14,15)]
   
+
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
