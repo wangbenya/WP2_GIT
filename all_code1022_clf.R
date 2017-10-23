@@ -186,10 +186,10 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.randomForest")
+reg_rf = makeLearner("regr.xgboost")
 #reg_rf$par.vals<-list(importance=T)
 
-class_rf = makeLearner("classif.randomForest")
+class_rf = makeLearner("classif.xgboost")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
@@ -250,7 +250,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:3)){
+for (tt in c(1:5)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -293,10 +293,7 @@ for (tt in c(1:3)){
 for (t in c(1,2)){
 <<<<<<< HEAD
   map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-=======
-  map1_predict[, t][map1_predict[, t] <=1] <- "Low"
->>>>>>> abae5a5b5321c88627ccc596803c956525d7daa1
-  map1_predict[, t][map1_predict[, t] < 2.0] <- "Medium"
+  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
@@ -388,14 +385,9 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  WP2Train<-reclass(WP2Train,0.5,2.0)
-  WP2Test<-reclass(WP2Test,0.5,2.0)
-=======
-  WP2Train<-reclass(WP2Train,1,2.0)
-  WP2Test<-reclass(WP2Test,1,2.0)
->>>>>>> abae5a5b5321c88627ccc596803c956525d7daa1
-  
+  WP2Train<-reclass(WP2Train,0.5,1.0)
+  WP2Test<-reclass(WP2Test,0.5,1.0)
+ 
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
   
@@ -493,13 +485,9 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,2.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,2.0)
-=======
-  M4_train_withKN<-reclass(M4_train_withKN,1,2.0)
-  M4_test_withKN<-reclass(M4_test_withKN,1,2.0)
->>>>>>> abae5a5b5321c88627ccc596803c956525d7daa1
+
+  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
+  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
   
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
