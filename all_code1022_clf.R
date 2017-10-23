@@ -240,28 +240,34 @@ set.seed(66)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
+#all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
-extra_TN<-read.csv("~/WP2_GIT/TN_extra.csv",header=T)
-extra_TN<-subset(extra_TN,extra_TN$value!="NA")
-names(extra_TN)<-c("TN")
-for (tt in c(1:10)){
+extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
+DON_GW4<-read.csv("~/WP2/data/DON_GW4.csv",header = T)
+DOC_GW4<-read.csv("~/WP2/data/DOC_GW4.csv",header = T)
+NOx_GW4<-read.csv("~/WP2/data/NOx_GW4.csv",header = T)
+NH4_GW4<-read.csv("~/WP2/data/NH4_GW4.csv",header = T)
+TN_GW4<-read.csv("~/WP2/data/TN_GW4.csv",header = T)
+
+for (tt in c(1:5)){
   
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_g$DON, p = .8, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
   
-  training <- all_g[trainIndex,]
-  testing <- all_g[-trainIndex,]
+  training <- all_points[trainIndex,]
+  testing <- all_points[-trainIndex,]
   
   ## load the point data 
-  training_df <- read_pointDataframes(training) 
-  
+  training_df <- training[,c(1,2,3,5)] %>% rbind(.,extra_n[,c(1,2,3,5)]) %>%
+    rbind(.,DON_GW4) %>% subset(.,.[,"DON"]!="NA") %>% read_pointDataframes(.)
   testing_df <-  read_pointDataframes(testing) 
   
-  training_points<-read_points(training) 
+  training_points<-training[,c(1,2,3,5)] %>% rbind(.,extra_n[,c(1,2,3,5)]) %>%
+     rbind(.,DON_GW4) %>% subset(.,.[,"DON"]!="NA") %>% read_points(.)
+  
   testing_points <- read_points(testing)
   
   ## map1, using kringing for DON interpolation
@@ -272,8 +278,11 @@ for (tt in c(1:10)){
   
   # Compute the sample variogram; note that the f.1 trend model is one of the
   var.smpl1 <- variogram(f.1, training_df)
+  plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1, vgm(c("Exp","Sph","Gau","Lin","Spl")))
+  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  
+  plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
@@ -391,13 +400,15 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ s1+s2)
   
-  training_DOC <- training[,c(1,2,3,4)] %>% read_pointDataframes(.) 
+  training_DOC <- training[,c(1,2,3,4)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
+    rbind(.,DOC_GW4) %>% subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
+  
   training_DOC<-add_S1S2(training_DOC)
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
-  #plot(var.smpl_DOC)
+  plot(var.smpl_DOC)
   
-  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Exp","Sph","Gau","Lin","Spl")))
-  #plot(var.smpl_DOC,dat.fit_DOC)
+  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  plot(var.smpl_DOC,dat.fit_DOC)
   # Perform the krige interpolation (note the use of the variogram model
   dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
@@ -405,14 +416,17 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   # kriging for NH4
   f.NH4 <- as.formula(log10(NH4) ~ s1+s2)
   
-  training_NH4 <- training[,c(1,2,3,7)] %>% read_pointDataframes(.) 
+  training_NH4 <- training[,c(1,2,3,8)] %>% rbind(.,extra_n[,c(1,2,3,7)]) %>%
+    rbind(.,NH4_GW4) %>% subset(.,.[,"NH4"]!="NA") %>% read_pointDataframes(.)
+  
   training_NH4<-add_S1S2(training_NH4)
   
   var.smpl_NH4 <- variogram(f.NH4, training_NH4)
+  plot(var.smpl_NH4)
   
   #plot(var.smpl_NH4)
   dat.fit_NH4 <- fit.variogram(var.smpl_NH4, vgm(c("Exp","Sph","Gau","Lin","Spl")))
-  
+  plot(var.smpl_NH4,dat.fit_NH4)
   # Perform the krige interpolation (note the use of the variogram model
   dat.krg_NH4 <- krige(f.NH4, training_NH4, base_grid, dat.fit_NH4) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_NH4) <- 10 ^ (values(dat.krg_NH4))
@@ -420,14 +434,17 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   # kriging for NOx
   f.NOx <- as.formula(log10(NOx) ~ s1+s2)
   
-  training_NOx <- training[,c(1,2,3,6)] %>% read_pointDataframes(.) 
+  training_NOx <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,6)]) %>%
+    rbind(.,NOx_GW4) %>% subset(.,.[,"NOx"]!="NA") %>% read_pointDataframes(.)
+  
   training_NOx<-add_S1S2(training_NOx)
   
   var.smpl_NOx <- variogram(f.NOx, training_NOx)
-  #plot(var.smpl_NOx)
+  plot(var.smpl_NOx)
   
   dat.fit_NOx <- fit.variogram(var.smpl_NOx,vgm(c("Sph","Exp","Gau","Lin","Spl")))
   # Perform the krige interpolation 
+  plot(var.smpl_NOx,dat.fit_NOx)
   dat.krg_NOx <- krige(f.NOx, training_NOx, base_grid, dat.fit_NOx) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_NOx) <- 10 ^ (values(dat.krg_NOx))
   
@@ -435,13 +452,14 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
 # kriging for TN
   f.TN <- as.formula(log10(TN) ~ s1+s2)
   
-  training_TN <- extra_TN %>% read_pointDataframes(.) 
+  training_TN <- TN_GW4 %>% read_pointDataframes(.) 
   training_TN<-add_S1S2(training_TN)
   
   var.smpl_TN <- variogram(f.TN, training_TN)
-  #plot(var.smpl_NOx)
+  plot(var.smpl_TN)
   
   dat.fit_TN <- fit.variogram(var.smpl_TN,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  plot(var.smpl_TN,dat.fit_TN)
   # Perform the krige interpolation 
   dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
