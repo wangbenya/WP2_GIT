@@ -244,11 +244,11 @@ all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-DON_GW4<-read.csv("~/WP2/data/DON_GW4.csv",header = T)
-DOC_GW4<-read.csv("~/WP2/data/DOC_GW4.csv",header = T)
-NOx_GW4<-read.csv("~/WP2/data/NOx_GW4.csv",header = T)
-NH4_GW4<-read.csv("~/WP2/data/NH4_GW4.csv",header = T)
-TN_GW4<-read.csv("~/WP2/data/TN_GW4.csv",header = T)
+DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
+DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
+NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
+NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
+TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 for (tt in c(1:3)){
   
