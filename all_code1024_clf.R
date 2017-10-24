@@ -330,10 +330,13 @@ for (tt in c(1:5)){
   GS_max = common_landscape("GS")
   cat_max = common_landscape("Catchment")
   
-  max_list<-data.frame(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
+  max_list<-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
 
-  
+  for (ii in seq(1,6)){
+      
+      M2_test [!(which(M2_test[,ii] %in% M2_train[,ii])),][,ii]=max_list[[i]]
 
+  }
   
   ## create the training and testing sets 
   WP2Train <- base6[, c(12,10,8, 6, 4,2, 13:17)]
