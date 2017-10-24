@@ -191,7 +191,7 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 400L)
+ctrl = makeTuneControlIrace(maxExperiments = 200L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
 
@@ -310,17 +310,11 @@ for (tt in c(1:5)){
   
   names(M2_train) <- colnames(M2_test)
   
-  for (ii in seq(1,6)){
-    
-    M2_train[,ii]<-as.factor(M2_train[,ii])
-    
-  }
   
   common_landscape<-function(land){
-    land<-as.character(land)
     land_dataset<-data.frame(table(M2_train[,land]))
-    land_common<-land_dataset[which(land_dataset[,2]==max(land_dataset[,2])),][,1]
-    return(land_common)
+    land_common<-subset(land_dataset,land_dataset[,2]==max(land_dataset[,2]))[1]
+    return(as.matrix(land_common))
   }
     
   soil_max = common_landscape("Soil")
@@ -333,29 +327,25 @@ for (tt in c(1:5)){
   max_list<-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
 
   for (ii in seq(1,6)){
-      
-      M2_test [!(which(M2_test[,ii] %in% M2_train[,ii])),][,ii]=max_list[[i]]
-
+      M2_train[,ii]<-as.factor(M2_train[,ii])
+      M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
+      M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
   }
   
-  ## create the training and testing sets 
-  WP2Train <- base6[, c(12,10,8, 6, 4,2, 13:17)]
-  WP2Test <- test6[, c(12,10,8, 6, 4,2, 13:17)]
-  
   ## build the model for map2
-  names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,0.5,1.0)
-  WP2Test<-reclass(WP2Test,0.5,1.0)
+  M2_train<-reclass(M2_train,0.5,1.0)
+  M2_test<-reclass(M2_test,0.5,1.0)
   
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
+  M2_train<-M2_train[,-c(4,5)]
+  M2_test<-M2_test[,-c(4,5)]
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train, "DON","clf")
+  rf_DON_m2 <- model_build(M2_train, "DON","clf")
   
-  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+  map2_predict <- predict(rf_DON_m2, newdata = M2_test)
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
@@ -433,31 +423,33 @@ for (tt in c(1:5)){
   names(kriging_nutrietn) <- c("DON_k", "DOC_k", "NH4_k", "NOx_k","TN_k")
   
   ## extract the data from landscapes_withN
-  landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
-  landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
+  landscape_train_withKN <- raster::extract(kriging_nutrietn, training_points)
+  landscape_test_withKN <- raster::extract(kriging_nutrietn, testing_points)
   
-  mm2 <- predict(rf_DON_m2, newdata = WP2Train)
+  mm2 <- predict(rf_DON_m2, newdata = M2_train)
   
-  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN),m2=mm2$data$response)
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
+  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN),m2=mm2$data$response)
+  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
   ## create the training and testing sets 
-  ## build the model for map2
-  names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  
-  
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
-  
+  ## build the model for map
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(10,12,13,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(10,12,13,15)]
   
+  for (i in c(5,6,8,9,10,11)) {
+    sd_train<-sd(M4_train_withKN[,i])
+    mean_train<-mean(M4_train_withKN[,i])
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    
+  }
+  
+
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
