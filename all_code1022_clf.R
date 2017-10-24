@@ -462,7 +462,7 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   mm2 <- predict(rf_DON_m2, newdata = WP2Train)
   
   M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN),m2=mm2$data$response)
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
+  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=M2_predict$data$response)  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   ## create the training and testing sets 
