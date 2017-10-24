@@ -24,10 +24,8 @@ library(reshape2)
 parallelStartSocket(16)
 
 WGS84 <- CRS("+proj=utm +zone=50 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-
 study_area <- shapefile("~/WP2/data/study_area.shp")
 water <- shapefile("~/WP2/data/water.shp")
-
 ## load the veg, soil, land use, groundwater subarea,
 ## surface water subare, catchment
 Soil <- raster("~/WP2/data/soil1.ovr")
@@ -75,7 +73,6 @@ read_pointDataframes <- function(read_data) {
   return(SPD)
 }
 
-
 reclass <- function(df, i, j) {
   df[, "DON"][df[, "DON"] <= i] <- "Low"
   df[, "DON"][df[, "DON"] < j] <- "Medium"
@@ -83,7 +80,6 @@ reclass <- function(df, i, j) {
   df[, "DON"] <- factor(df[, "DON"], levels = c("Low", "Medium", "High"))
   return(df)
 }
-
 
 reclass2 <- function(df) {
   df[, "DON"][df[, "DON"] == 1] <- "Low"
@@ -166,7 +162,6 @@ lm.depth <- lm(f_depth, data = depth)
 var.depth <- variogram(f_depth, depth)
 #plot(var.depth)
 dat.fit_depth <- fit.variogram(var.depth,vgm(c("Sph","Exp","Gau","Lin","Spl")))
-#plot(var.depth, dat.fit_depth, xlim = c(0, 40000))
 # Perform the krige interpolation (note the use of the variogram model
 # created in the earlier step)
 depth_k <- krige(f_depth, depth, base_grid, dat.fit_depth) %>% raster(.) %>% raster::mask(., study_area)
@@ -186,10 +181,10 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.xgboost")
+reg_rf = makeLearner("regr.randomForest")
 #reg_rf$par.vals<-list(importance=T)
 
-class_rf = makeLearner("classif.xgboost")
+class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 400L)
 
@@ -207,27 +202,23 @@ model_build <- function(dataset, n_target, method) {
   if (method == "reg") {
     ## define the regression task for DON 
     WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-    ## cross validation
     ## 10-fold cross-validation
     rin = makeResampleInstance(rdesc, task = WP3_target)
     ## tune the parameters for rf and xgboost
     res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                              show.info = FALSE, measures = rsq)
-    
     ## set the hyperparameter for rf and xgboost 
     lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
     
   } else {
     ## define the regression task for DON 
     WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
-    ## cross validation
     ## 10-fold cross-validation
     rin = makeResampleInstance(rdesc, task = WP3_target)
     res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                              show.info = FALSE, measures = acc)
     lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
   }
-  
   ## train the final model 
   set.seed(35)
   rf <- mlr::train(lrn_rf, WP3_target)
@@ -240,9 +231,6 @@ set.seed(66)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-#all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
-#all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
-extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
 DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
@@ -250,7 +238,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:5)){
+for (tt in c(1:3)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -270,37 +258,36 @@ for (tt in c(1:5)){
   
   testing_points <- read_points(testing)
   
+  M1_Train<-training_df
+  M1_Test<-testing_df
   ## map1, using kringing for DON interpolation
-  f.1 <- as.formula(log10(DON) ~ s1+s2)
+  f.DON<- as.formula(log10(DON) ~ s1+s2)
   # Add X and Y to training 
-  training_df<-add_S1S2(training_df)
-  testing_df<-add_S1S2(testing_df)
-  
+  M1_train<-add_S1S2(M1_Train)
+  M1_test<-add_S1S2(M1_Test)
   # Compute the sample variogram; note that the f.1 trend model is one of the
-  var.smpl1 <- variogram(f.1, training_df)
-  plot(var.smpl1)
+  var.DON <- variogram(f.DON, M1_train)
+  plot(var.DON)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  dat.DON <- fit.variogram(var.DON,vgm(c("Sph","Exp","Gau","Lin","Spl")))
   
-  plot(var.smpl1,dat.fit1)
+  plot(var.DON,dat.DON)
   # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
-  values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
-  dat.krg_DON<-kriging_DON_m1
+  M1_kriging_DON <- krige(f.DON, M1_train, base_grid, dat.DON) %>% raster(.) %>% raster::mask(., study_area)
+  values(M1_kriging_DON) <- 10 ^ (values(M1_kriging_DON))
+  dat.krg_DON<-M1_kriging_DON
   
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-
+  M1_predict <- data.frame(observed_DON=M1_test@data$DON,predicted_DON=raster::extract(M1_kriging_DON, testing_points))
+  
 for (t in c(1,2)){
-  map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
-  map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-  map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
+  M1_predict[, t][M1_predict[, t] <=0.5] <- "Low"
+  M1_predict[, t][M1_predict[, t] <=1] <- "Low"
+  M1_predict[, t][(M1_predict[, t] != "Low") & (M1_predict[, t] != "Medium")] <- "High"
+  M1_predict[, t] <- factor(M1_predict[, t], levels = c("Low", "Medium", "High"))
   
 }
 
-print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
-
-
+print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points)
   landscape_test <- raster::extract(landscapes, testing_points)
@@ -384,9 +371,9 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,0.5,1.0)
-  WP2Test<-reclass(WP2Test,0.5,1.0)
- 
+  WP2Train<-reclass(WP2Train,0.5,2.0)
+  WP2Test<-reclass(WP2Test,0.5,2.0)
+
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
   
@@ -448,7 +435,6 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   dat.krg_NOx <- krige(f.NOx, training_NOx, base_grid, dat.fit_NOx) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_NOx) <- 10 ^ (values(dat.krg_NOx))
   
-
 # kriging for TN
   f.TN <- as.formula(log10(TN) ~ s1+s2)
   
@@ -463,8 +449,6 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   # Perform the krige interpolation 
   dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
-  
-
 
   ## create rasterstack with kriging data
   kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC, dat.krg_NH4, dat.krg_NOx,dat.krg_TN)
@@ -478,19 +462,14 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  
   ## create the training and testing sets 
   ## build the model for map2
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
-  
- #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
- #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
-  
+  M4_train_withKN<-reclass(M4_train_withKN,0.5,2.0)
+  M4_test_withKN<-reclass(M4_test_withKN,0.5,2.0)
+    
   M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
   M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
   
@@ -499,10 +478,7 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
-  
-  #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
-  #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
-  
+    
   print(postResample(map4_predict$data$response,map4_predict$data$truth))
   
   predict_results<-data.frame(seeds,map1_predict,map2_predict$data,map4_predict$data)
