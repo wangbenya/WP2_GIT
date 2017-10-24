@@ -381,8 +381,8 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","clf")
   
-  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
-  print(postResample(map2_predict$data$response, map2_predict$data$truth))
+  M2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+  print(postResample(M2_predict$data$response, M2_predict$data$truth))
   
   ## map4, kriging first and then rf
   # kriging for DOC
@@ -484,11 +484,11 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
   ## map3 predict accuracy
-  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
+  M4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
     
   print(postResample(map4_predict$data$response,map4_predict$data$truth))
   
-  predict_results<-data.frame(seeds,map1_predict,map2_predict$data,map4_predict$data)
+  predict_results<-data.frame(seeds,M1_predict,M2_predict$data,M4_predict$data)
   
   all_results<-rbind(all_results,predict_results)
   
