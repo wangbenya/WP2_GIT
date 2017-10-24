@@ -371,19 +371,11 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  WP2Train<-reclass(WP2Train,0.5,2.0)
-  WP2Test<-reclass(WP2Test,0.5,2.0)
-
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
-=======
   WP2Train<-reclass(WP2Train,0.5,1.0)
   WP2Test<-reclass(WP2Test,0.5,1.0)
  
   WP2Train<-WP2Train[,-c(4,5,10,11)]
   WP2Test<-WP2Test[,-c(4,5,10,11)]
->>>>>>> 2fcc5160e496bceeea4fe504644c23a03030cfb0
   
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","clf")
@@ -477,29 +469,17 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,2.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,2.0)
-    
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
-  
-=======
 
   M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
   M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
   
- #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
- #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
-  M4_train_withKN$DON_c<-M4_train_withKN[,16]-M4_train_withKN[,12]-M4_train_withKN[,14]-M4_train_withKN[,15]
-  M4_test_withKN$DON_c<-M4_test_withKN[,16]-M4_test_withKN[,12]-M4_test_withKN[,14]-M4_test_withKN[,15]
+  #M4_train_withKN$DON_c<-M4_train_withKN[,16]-M4_train_withKN[,12]-M4_train_withKN[,14]-M4_train_withKN[,15]
+  #M4_test_withKN$DON_c<-M4_test_withKN[,16]-M4_test_withKN[,12]-M4_test_withKN[,14]-M4_test_withKN[,15]
 
   M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,14,15)]
   M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,14,15)]
   
-
->>>>>>> 2fcc5160e496bceeea4fe504644c23a03030cfb0
-  set.seed(seeds)
+    set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
   ## map3 predict accuracy
