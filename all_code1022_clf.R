@@ -486,7 +486,7 @@ print(confusionMatrix(M1_predict[,2],M1_predict[,1])$overall)
   ## map3 predict accuracy
   M4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
     
-  print(postResample(map4_predict$data$response,map4_predict$data$truth))
+  print(postResample(M4_predict$data$response,M4_predict$data$truth))
   
   predict_results<-data.frame(seeds,M1_predict,M2_predict$data,M4_predict$data)
   
