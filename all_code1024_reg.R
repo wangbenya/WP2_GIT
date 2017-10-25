@@ -167,7 +167,6 @@ var.depth <- variogram(f_depth, depth)
 #plot(var.depth)
 dat.fit_depth <- fit.variogram(var.depth,vgm(c("Sph","Exp","Gau","Lin","Spl")))
 #plot(var.depth, dat.fit_depth, xlim = c(0, 40000))
-# Perform the krige interpolation (note the use of the variogram model
 # created in the earlier step)
 depth_k <- krige(f_depth, depth, base_grid, dat.fit_depth) %>% raster(.) %>% raster::mask(., study_area)
 #plot(depth_k)
@@ -390,13 +389,6 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
   
-  for ( i in seq(1,9)){
-    print(names(WP2Train)[i])
-    print(range(WP2Train[,i]))
-    
-  }
-  
-  
   WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.1)
   
@@ -407,7 +399,9 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
-  
+  map2_predict$data$response<-10^map2_predict$data$response
+  map2_predict$data$truth<-10^map2_predict$data$truth
+
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
@@ -506,15 +500,13 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   
   M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
   M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
-  
-  for (i in seq(1,11)){
-    print(ggplot(data=M4_train_withKN,aes(x=M4_train_withKN[,i]))+geom_density()+labs(x=names(M4_train_withKN)[i]))
-  }
-  
+    
   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.1)
+  
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.1)
   M4_test_withKN$DON<-log10(M4_test_withKN$DON)
+  
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","reg")
   
