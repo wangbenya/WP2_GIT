@@ -271,7 +271,7 @@ for (tt in c(1:3)){
   testing_points <- read_points(testing)
   
   ## map1, using kringing for DON interpolation
-  f.1 <- as.formula(log10(DON) ~ 1)
+  f.1 <- as.formula(log10(DON) ~ s1+s2)
   # Add X and Y to training 
   training_df<-add_S1S2(training_df)
   testing_df<-add_S1S2(testing_df)
@@ -350,7 +350,7 @@ for (tt in c(1:3)){
   
   ## map4, kriging first and then rf
   # kriging for DOC
-  f.DOC <- as.formula(log10(DOC) ~ 1)
+  f.DOC <- as.formula(log10(DOC) ~ s1+s2)
   
   training_DOC <- training[,c(1,2,3,4)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
     rbind(.,DOC_GW4) %>% subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
@@ -366,7 +366,7 @@ for (tt in c(1:3)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   # kriging for NH4
-  f.NH4 <- as.formula(log10(NH4) ~ 1)
+  f.NH4 <- as.formula(log10(NH4) ~ s1+s2)
   
   training_NH4 <- training[,c(1,2,3,8)] %>% rbind(.,extra_n[,c(1,2,3,7)]) %>%
     rbind(.,NH4_GW4) %>% subset(.,.[,"NH4"]!="NA") %>% read_pointDataframes(.)
@@ -384,7 +384,7 @@ for (tt in c(1:3)){
   values(dat.krg_NH4) <- 10 ^ (values(dat.krg_NH4))
   
   # kriging for NOx
-  f.NOx <- as.formula(log10(NOx) ~ 1)
+  f.NOx <- as.formula(log10(NOx) ~ s1+s2)
   
   training_NOx <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,6)]) %>%
     rbind(.,NOx_GW4) %>% subset(.,.[,"NOx"]!="NA") %>% read_pointDataframes(.)
@@ -402,7 +402,7 @@ for (tt in c(1:3)){
   
   
   # kriging for TN
-  f.TN <- as.formula(log10(TN) ~ 1)
+  f.TN <- as.formula(log10(TN) ~ s1+s2)
   
   training_TN <- TN_GW4 %>% read_pointDataframes(.) 
   training_TN<-add_S1S2(training_TN)
