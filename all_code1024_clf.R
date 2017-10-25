@@ -250,7 +250,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:50)){
+for (tt in c(1:3)){
   
   print(tt)
   seeds<-seed.list[tt]
