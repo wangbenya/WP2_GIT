@@ -236,7 +236,7 @@ model_build <- function(dataset, n_target, method) {
 
 ## load the data 
 all_results<-data.frame()
-set.seed(66)
+set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
@@ -250,7 +250,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:5)){
+for (tt in c(1:50)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -271,7 +271,7 @@ for (tt in c(1:5)){
   testing_points <- read_points(testing)
   
   ## map1, using kringing for DON interpolation
-  f.1 <- as.formula(log10(DON) ~ s1+s2)
+  f.1 <- as.formula(log10(DON) ~ 1)
   # Add X and Y to training 
   training_df<-add_S1S2(training_df)
   testing_df<-add_S1S2(testing_df)
@@ -317,12 +317,12 @@ for (tt in c(1:5)){
     return(as.matrix(land_common))
   }
     
-  soil_max = common_landscape("Soil")
-  veg_max=common_landscape("Veg")
-  landuse_max = common_landscape("Landuse")
-  ss_max = common_landscape("SS")
-  GS_max = common_landscape("GS")
-  cat_max = common_landscape("Catchment")
+  soil_max = common_landscape("Soil")[1]
+  veg_max=common_landscape("Veg")[1]
+  landuse_max = common_landscape("Landuse")[1]
+  ss_max = common_landscape("SS")[1]
+  GS_max = common_landscape("GS")[1]
+  cat_max = common_landscape("Catchment")[1]
   
   max_list<-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
 
@@ -350,7 +350,7 @@ for (tt in c(1:5)){
   
   ## map4, kriging first and then rf
   # kriging for DOC
-  f.DOC <- as.formula(log10(DOC) ~ s1+s2)
+  f.DOC <- as.formula(log10(DOC) ~ 1)
   
   training_DOC <- training[,c(1,2,3,4)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
     rbind(.,DOC_GW4) %>% subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
@@ -366,7 +366,7 @@ for (tt in c(1:5)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   # kriging for NH4
-  f.NH4 <- as.formula(log10(NH4) ~ s1+s2)
+  f.NH4 <- as.formula(log10(NH4) ~ 1)
   
   training_NH4 <- training[,c(1,2,3,8)] %>% rbind(.,extra_n[,c(1,2,3,7)]) %>%
     rbind(.,NH4_GW4) %>% subset(.,.[,"NH4"]!="NA") %>% read_pointDataframes(.)
@@ -384,7 +384,7 @@ for (tt in c(1:5)){
   values(dat.krg_NH4) <- 10 ^ (values(dat.krg_NH4))
   
   # kriging for NOx
-  f.NOx <- as.formula(log10(NOx) ~ s1+s2)
+  f.NOx <- as.formula(log10(NOx) ~ 1)
   
   training_NOx <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,6)]) %>%
     rbind(.,NOx_GW4) %>% subset(.,.[,"NOx"]!="NA") %>% read_pointDataframes(.)
@@ -402,7 +402,7 @@ for (tt in c(1:5)){
   
   
   # kriging for TN
-  f.TN <- as.formula(log10(TN) ~ s1+s2)
+  f.TN <- as.formula(log10(TN) ~ 1)
   
   training_TN <- TN_GW4 %>% read_pointDataframes(.) 
   training_TN<-add_S1S2(training_TN)
@@ -426,10 +426,10 @@ for (tt in c(1:5)){
   landscape_train_withKN <- raster::extract(kriging_nutrietn, training_points)
   landscape_test_withKN <- raster::extract(kriging_nutrietn, testing_points)
   
-  mm2 <- predict(rf_DON_m2, newdata = M2_train)
+
   
-  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN),m2=mm2$data$response)
-  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
+  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
@@ -437,9 +437,11 @@ for (tt in c(1:5)){
   ## build the model for map
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
+  M4_train_withKN$DON_c<-M4_train_withKN$TN_k-M4_train_withKN$NH4_k-M4_train_withKN$NOx_k
+  M4_test_withKN$DON_c<-M4_test_withKN$TN_k-M4_test_withKN$NH4_k-M4_test_withKN$NOx_k
   
-  M4_train_withKN<-M4_train_withKN[,-c(10,12,13,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(10,12,13,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(10,12,13)]
+  M4_test_withKN<-M4_test_withKN[,-c(10,12,13)]
   
   for (i in c(5,6,8,9,10,11)) {
     sd_train<-sd(M4_train_withKN[,i])
