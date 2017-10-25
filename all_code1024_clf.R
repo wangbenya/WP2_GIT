@@ -184,7 +184,7 @@ landscapes<-stack(Soil,Veg,Land_use,ss,gs,Cat,depth_k,water_distance)
 names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance")
 
 ## set the parameters for mlr
-seed=35
+seed=719
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #reg_rf$par.vals<-list(importance=T)
@@ -203,7 +203,7 @@ para_rf = makeParamSet(
 )
 
 model_build <- function(dataset, n_target, method) {
-  set.seed(35)
+  set.seed(719)
   if (method == "reg") {
     ## define the regression task for DON 
     WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
@@ -229,14 +229,14 @@ model_build <- function(dataset, n_target, method) {
   }
   
   ## train the final model 
-  set.seed(35)
+  set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
   return(rf)
 }
 
 ## load the data 
 all_results<-data.frame()
-set.seed(66)
+set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
@@ -415,8 +415,6 @@ for (tt in c(1:5)){
   # Perform the krige interpolation 
   dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
-  
-  
   
   ## create rasterstack with kriging data
   kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC, dat.krg_NH4, dat.krg_NOx,dat.krg_TN)
