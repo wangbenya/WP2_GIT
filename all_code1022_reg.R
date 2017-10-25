@@ -250,11 +250,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-<<<<<<< HEAD
-for (tt in c(1:15)){
-=======
-for (tt in c(1:5)){
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
+for (tt in c(1:3)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -294,20 +290,15 @@ for (tt in c(1:5)){
   
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
 
-for (t in c(1,2)){
-<<<<<<< HEAD
-  map1_predict[, t][map1_predict[, t] <=1] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 3.0] <- "Medium"
-=======
-  map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
-  map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-  map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
+#for (t in c(1,2)){
+ # map1_predict[, t][map1_predict[, t] <=1] <- "Low"
+ # map1_predict[, t][map1_predict[, t] < 2.0] <- "Medium"
+ # map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
+ # map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
-}
+# }
 
-print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
+print(postResample(map1_predict[,2],map1_predict[,1]))
 
 
   ## M2, using RF to predict the DON
@@ -393,22 +384,14 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  WP2Train<-reclass(WP2Train,1,3.0)
-  WP2Test<-reclass(WP2Test,1,3.0)
+  #WP2Train<-reclass(WP2Train,1,2.0)
+ # WP2Test<-reclass(WP2Test,1,2.0)
   
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
-=======
-  WP2Train<-reclass(WP2Train,0.5,1.0)
-  WP2Test<-reclass(WP2Test,0.5,1.0)
- 
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train, "DON","clf")
+  rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
@@ -491,10 +474,8 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
   landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
   
-  mm2 <- predict(rf_DON_m2, newdata = WP2Train)
-  
-  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN),m2=mm2$data$response)
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
+  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
@@ -503,23 +484,17 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  M4_train_withKN<-reclass(M4_train_withKN,1,3.0)
-  M4_test_withKN<-reclass(M4_test_withKN,1,3.0)
-=======
-
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
+#  M4_train_withKN<-reclass(M4_train_withKN,1,2.0)
+ # M4_test_withKN<-reclass(M4_test_withKN,1,2.0)
   
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
   
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
+  rf_DON_m4<-model_build(M4_train_withKN,"DON","reg")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
@@ -540,21 +515,21 @@ dim(all_results)
 
 seeds<-unique(all_results$seeds)
 length(seeds)
+
 all_acc<-data.frame()
 
 for (qq in seeds){
-  sub_data<-subset(all_results,all_results$seeds==qq)
-  print(dim(sub_data))
-  acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
-  acc_2<-postResample(sub_data[,5],sub_data[,4])[1]
-  acc_3<-postResample(sub_data[,7],sub_data[,6])[1]
-  single_acc<-data.frame(qq,acc_1,acc_2,acc_3)
-  all_acc<-rbind(all_acc,single_acc)
+  print(qq)
+  sub_data<-subset(all_results,all_results$seeds==qq)   
+  p1<-reclass4(sub_data[,c(3,2)],0.5,1.0)
+  p2<-reclass4(sub_data[,c(5,4)],0.5,1.0)
+  p4<-reclass4(sub_data[,c(7,6)],0.5,1.0)
+  print(table(p1[,2]))
+  print(table(p2[,2]))
+  print(table(p4[,2]))
+  sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
   
+  all_acc<-rbind(all_acc,sing_acc)
 }
 
 print(all_acc)
-
-all_acc2<-melt(all_acc,id="qq")
-lm1<-lm(value~variable,data=all_acc2) %>% aov(.) %>% TukeyHSD (.)
-print(lm1)

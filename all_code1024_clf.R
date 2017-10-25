@@ -191,7 +191,7 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 400L)
+ctrl = makeTuneControlIrace(maxExperiments = 200L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
 
@@ -250,11 +250,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-<<<<<<< HEAD
-for (tt in c(1:15)){
-=======
 for (tt in c(1:5)){
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
   
   print(tt)
   seeds<-seed.list[tt]
@@ -270,7 +266,7 @@ for (tt in c(1:5)){
   testing_df <-  read_pointDataframes(testing) 
   
   training_points<-training[,c(1,2,3,5)] %>% rbind(.,extra_n[,c(1,2,3,5)]) %>%
-     rbind(.,DON_GW4) %>% subset(.,.[,"DON"]!="NA") %>% read_points(.)
+    rbind(.,DON_GW4) %>% subset(.,.[,"DON"]!="NA") %>% read_points(.)
   
   testing_points <- read_points(testing)
   
@@ -293,23 +289,18 @@ for (tt in c(1:5)){
   dat.krg_DON<-kriging_DON_m1
   
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-
-for (t in c(1,2)){
-<<<<<<< HEAD
-  map1_predict[, t][map1_predict[, t] <=1] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 3.0] <- "Medium"
-=======
-  map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
-  map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
-  map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-  map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
-}
-
-print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
-
-
+  for (t in c(1,2)){
+    map1_predict[, t][map1_predict[, t] <=0.5] <- "Low"
+    map1_predict[, t][map1_predict[, t] < 1.0] <- "Medium"
+    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
+    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
+    
+  }
+  
+  print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
+  
+  
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points)
   landscape_test <- raster::extract(landscapes, testing_points)
@@ -319,98 +310,42 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   
   names(M2_train) <- colnames(M2_test)
   
-  transCat<-function(i){
-    var_name<-names(M2_train)[i]
-    a<-as.list(unique(M2_train[,var_name]))
-    b<- data.frame()
+  
+  common_landscape<-function(land){
+    land_dataset<-data.frame(table(M2_train[,land]))
+    land_common<-subset(land_dataset,land_dataset[,2]==max(land_dataset[,2]))[1]
+    return(as.matrix(land_common))
+  }
     
-    for (x in seq(1, length(a))) {
-      value = a[[x]]
-      data1 <- subset(M2_train, M2_train[,var_name] == value)
-      c <- data.frame(value, mean(data1$DON), length(data1$DON))
-      b <- rbind(b,c)
-    }
-    
-    colnames(b) <- c(var_name, paste0("mean_DON_",var_name),"NO.")
-    return(b)
+  soil_max = common_landscape("Soil")
+  veg_max=common_landscape("Veg")
+  landuse_max = common_landscape("Landuse")
+  ss_max = common_landscape("SS")
+  GS_max = common_landscape("GS")
+  cat_max = common_landscape("Catchment")
+  
+  max_list<-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
+
+  for (ii in seq(1,6)){
+      M2_train[,ii]<-as.factor(M2_train[,ii])
+      M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
+      M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
   }
   
-  b1<-transCat(1)
-  b2<-transCat(2)
-  b3<-transCat(3)
-  b4<-transCat(4)
-  b5<-transCat(5)
-  b6<-transCat(6)
-  
-  soil_max = b1[which(b1$NO. == max(b1$NO.)),][, 2]
-  veg_max = b2[which(b2$NO. == max(b2$NO.)),][, 2]
-  landuse_max = b3[which(b3$NO. == max(b3$NO.)),][, 2]
-  ss_max = b4[which(b4$NO. == max(b4$NO.)),][, 2]
-  GS_max = b5[which(b5$NO. == max(b5$NO.)),][, 2]
-  cat_max = b6[which(b6$NO. == max(b6$NO.)),][, 2]
-  
-  base1 <- (merge(b1, M2_train, by = 'Soil', all.y = T))
-  base2 <- (merge(b2, base1, by = 'Veg', all.y = T))
-  base2 <- base2[, - c(3, 6)]
-  
-  test1 <- (merge(b1, M2_test, by = 'Soil', all.y = T))
-  test1[is.na(test1)] <- soil_max
-  test1 <- test1[, - c(3)]
-  
-  test2 <- (merge(b2, test1, by = 'Veg', all.y = T))
-  test2[is.na(test2)] <- veg_max
-  test2 <- test2[, - c(3)]
-  
-  base3 <- (merge(b3, base2, by = 'Landuse', all.y = T))
-  base4 <- (merge(b4, base3, by = 'SS', all.y = T))
-  base4 <- base4[, - c(3, 6)]
-  
-  test3 <- (merge(b3, test2, by = 'Landuse', all.y = T))
-  test3[is.na(test3)] <- landuse_max
-  test3 <- test3[, - c(3)]
-  
-  test4 <- (merge(b4, test3, by = 'SS', all.y = T))
-  test4[is.na(test4)] <- ss_max
-  test4 <- test4[, - c(3)]
-  
-  base5 <- (merge(b5, base4, by = 'GS', all.y = T))
-  base6 <- (merge(b6, base5, by = 'Catchment', all.y = T))
-  base6 <- base6[, - c(3, 6)]
-  
-  test5 <- (merge(b5, test4, by = 'GS', all.y = T))
-  test5[is.na(test5)] <- GS_max
-  test5 <- test5[, - c(3)]
-  
-  test6 <- (merge(b6, test5, by = 'Catchment', all.y = T))
-  test6[is.na(test6)] <- cat_max
-  test6 <- test6[, - c(3)]
-  
-  ## create the training and testing sets 
-  WP2Train <- base6[, c(12,10,8, 6, 4,2, 13:17)]
-  WP2Test <- test6[, c(12,10,8, 6, 4,2, 13:17)]
-  
   ## build the model for map2
-  names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-<<<<<<< HEAD
-  WP2Train<-reclass(WP2Train,1,3.0)
-  WP2Test<-reclass(WP2Test,1,3.0)
+  M2_train<-reclass(M2_train,0.5,1.0)
+  M2_test<-reclass(M2_test,0.5,1.0)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
-=======
-  WP2Train<-reclass(WP2Train,0.5,1.0)
-  WP2Test<-reclass(WP2Test,0.5,1.0)
- 
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
+  M2_train<-M2_train[,-c(4,5)]
+  M2_test<-M2_test[,-c(4,5)]
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train, "DON","clf")
+  rf_DON_m2 <- model_build(M2_train, "DON","clf")
   
-  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+  map2_predict <- predict(rf_DON_m2, newdata = M2_test)
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
@@ -465,8 +400,8 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   dat.krg_NOx <- krige(f.NOx, training_NOx, base_grid, dat.fit_NOx) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_NOx) <- 10 ^ (values(dat.krg_NOx))
   
-
-# kriging for TN
+  
+  # kriging for TN
   f.TN <- as.formula(log10(TN) ~ s1+s2)
   
   training_TN <- TN_GW4 %>% read_pointDataframes(.) 
@@ -481,43 +416,40 @@ print(confusionMatrix(map1_predict[,2],map1_predict[,1])$overall)
   dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
   
-
-
+  
+  
   ## create rasterstack with kriging data
   kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC, dat.krg_NH4, dat.krg_NOx,dat.krg_TN)
   names(kriging_nutrietn) <- c("DON_k", "DOC_k", "NH4_k", "NOx_k","TN_k")
   
   ## extract the data from landscapes_withN
-  landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
-  landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
+  landscape_train_withKN <- raster::extract(kriging_nutrietn, training_points)
+  landscape_test_withKN <- raster::extract(kriging_nutrietn, testing_points)
   
-  mm2 <- predict(rf_DON_m2, newdata = WP2Train)
+  mm2 <- predict(rf_DON_m2, newdata = M2_train)
   
-  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN),m2=mm2$data$response)
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
+  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN),m2=mm2$data$response)
+  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN), m2=map2_predict$data$response)  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
   ## create the training and testing sets 
-  ## build the model for map2
-  names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  ## build the model for map
+  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
+  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-<<<<<<< HEAD
-  M4_train_withKN<-reclass(M4_train_withKN,1,3.0)
-  M4_test_withKN<-reclass(M4_test_withKN,1,3.0)
-=======
+  M4_train_withKN<-M4_train_withKN[,-c(10,12,13,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(10,12,13,15)]
+  
+  for (i in c(5,6,8,9,10,11)) {
+    sd_train<-sd(M4_train_withKN[,i])
+    mean_train<-mean(M4_train_withKN[,i])
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    
+  }
+  
 
-  M4_train_withKN<-reclass(M4_train_withKN,0.5,1.0)
-  M4_test_withKN<-reclass(M4_test_withKN,0.5,1.0)
->>>>>>> b81b9d1f8d7466ac3e077660f1c090c4142fe1a9
-  
- #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
- #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
-  
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,14,15)]
-  
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
   
