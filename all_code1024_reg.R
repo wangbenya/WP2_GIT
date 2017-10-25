@@ -157,7 +157,7 @@ base_grid <- as(r, 'SpatialGrid')
 depth <- read.csv("~/WP2/data/sampling_depth.csv",header=T) %>% read_pointDataframes(.)
 
 # Define the 1st order polynomial equation
-f_depth <- as.formula(sampling_d ~ s1 + s2)
+f_depth <- as.formula(log10(sampling_d+0.01) ~ 1)
 # Add X and Y to training 
 depth<-add_S1S2(depth)
 # Run the regression model
@@ -190,7 +190,7 @@ reg_rf = makeLearner("regr.randomForest")
 
 class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 400L)
+ctrl = makeTuneControlIrace(maxExperiments = 200L)
 
 rdesc = makeResampleDesc("CV", iters = 5)
 
@@ -228,14 +228,14 @@ model_build <- function(dataset, n_target, method) {
   }
   
   ## train the final model 
-  set.seed(35)
+  set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
   return(rf)
 }
 
 ## load the data 
 all_results<-data.frame()
-set.seed(66)
+set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
@@ -249,7 +249,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:3)){
+for (tt in c(1:5)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -277,11 +277,11 @@ for (tt in c(1:3)){
   
   # Compute the sample variogram; note that the f.1 trend model is one of the
   var.smpl1 <- variogram(f.1, training_df)
-  plot(var.smpl1)
+  #plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
   dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp","Gau","Lin","Spl")))
   
-  plot(var.smpl1,dat.fit1)
+  #plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
@@ -386,19 +386,20 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   #WP2Train<-reclass(WP2Train,1,2.0)
  # WP2Test<-reclass(WP2Test,1,2.0)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
+  #WP2Train<-WP2Train[,-c(4,5)]
+  #WP2Test<-WP2Test[,-c(4,5)]
   
   WP2Train$DON<-log10(WP2Train$DON)
-  WP2Train$Distance<-log10(WP2Train$Distance+0.1)
+  WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
   WP2Test$DON<-log10(WP2Test$DON)
-  WP2Test$Distance<-log10(WP2Test$Distance+0.1)
+  WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+
   map2_predict$data$response<-10^map2_predict$data$response
   map2_predict$data$truth<-10^map2_predict$data$truth
 
@@ -472,8 +473,6 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
   
-
-
   ## create rasterstack with kriging data
   kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC, dat.krg_NH4, dat.krg_NOx,dat.krg_TN)
   names(kriging_nutrietn) <- c("DON_k", "DOC_k", "NH4_k", "NOx_k","TN_k")
@@ -498,13 +497,13 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  #M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
+  #M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
     
   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
-  M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.1)
+  M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
-  M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.1)
+  M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
   M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
   set.seed(seeds)
@@ -530,23 +529,16 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
 
 dim(all_results)
 
-seeds<-unique(all_results$seeds)
-length(seeds)
-
-all_acc<-data.frame()
-
-for (qq in seeds){
-  print(qq)
-  sub_data<-subset(all_results,all_results$seeds==qq)   
-  p1<-reclass4(sub_data[,c(3,2)],0.5,1.0)
-  p2<-reclass4(sub_data[,c(5,4)],0.5,1.0)
-  p4<-reclass4(sub_data[,c(7,6)],0.5,1.0)
+for (a1 in c(0.5,1.0,1.5)){
+   for (a2 in c(1.0,1.5,2.0,2.5,3.0,3.5)){
+  if (a2-a1>=0.5){
+  p1<-reclass4(all_results[,c(3,2)],a1,a2)
+  p2<-reclass4(all_results[,c(5,4)],a1,a2)
+  p4<-reclass4(all_results[,c(7,6)],a1,a2)
   print(table(p1[,2]))
-  print(table(p2[,2]))
-  print(table(p4[,2]))
   sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
-  
-  all_acc<-rbind(all_acc,sing_acc)
+  print(a1)
+  print(a2)
+  print(sing_acc)
 }
-
-print(all_acc)
+ }}
