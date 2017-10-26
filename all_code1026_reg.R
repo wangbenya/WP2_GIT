@@ -249,7 +249,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:5)){
+for (tt in c(1:10)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -611,6 +611,6 @@ for (a1 in c(0.5,1.0,1.5)){
     }
   }}
 
-for (i in seq(1,16)){
-  print(ggplot(data=M4_train_withKN,aes(x=M4_train_withKN[,i]))+geom_density()+labs(x=names(M4_train_withKN)[i]))
-}
+#for (i in seq(1,16)){
+ # print(ggplot(data=M4_train_withKN,aes(x=M4_train_withKN[,i]))+geom_density()+labs(x=names(M4_train_withKN)[i]))
+#}
