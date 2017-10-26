@@ -440,7 +440,8 @@ for (tt in c(1:10)){
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
-  training_DOC <- training[,c(1,2,3,4)] %>% read_pointDataframes(.)
+  training_DOC <- training[,c(1,2,3,4)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
+    rbind(.,DOC_GW4) %>% subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
   
   training_DOC<-add_S1S2(training_DOC)
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
@@ -455,7 +456,8 @@ for (tt in c(1:10)){
   # kriging for NH4
   f.NH4 <- as.formula(log10(NH4) ~ 1)
   
-  training_NH4 <- training[,c(1,2,3,8)] %>% read_pointDataframes(.)
+  training_NH4 <- training[,c(1,2,3,8)] %>% rbind(.,extra_n[,c(1,2,3,7)]) %>%
+    rbind(.,NH4_GW4) %>% subset(.,.[,"NH4"]!="NA") %>% read_pointDataframes(.)
   
   training_NH4<-add_S1S2(training_NH4)
   
@@ -472,7 +474,8 @@ for (tt in c(1:10)){
   # kriging for NOx
   f.NOx <- as.formula(log10(NOx) ~ 1)
   
-  training_NOx <- training[,c(1,2,3,7)] %>% read_pointDataframes(.)
+  training_NOx <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,6)]) %>%
+    rbind(.,NOx_GW4) %>% subset(.,.[,"NOx"]!="NA") %>% read_pointDataframes(.)
   
   training_NOx<-add_S1S2(training_NOx)
   
