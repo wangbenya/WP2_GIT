@@ -192,7 +192,7 @@ class_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 200L)
 
-rdesc = makeResampleDesc("CV", iters = 5)
+rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF
 para_rf = makeParamSet(
@@ -384,10 +384,10 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
   #WP2Train<-reclass(WP2Train,1,2.0)
- # WP2Test<-reclass(WP2Test,1,2.0)
+  # WP2Test<-reclass(WP2Test,1,2.0)
   
-  #WP2Train<-WP2Train[,-c(4,5)]
-  #WP2Test<-WP2Test[,-c(4,5)]
+  WP2Train<-WP2Train[,-c(4,5)]
+  WP2Test<-WP2Test[,-c(4,5)]
   
   WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
@@ -497,8 +497,8 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  #M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  #M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
     
   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
