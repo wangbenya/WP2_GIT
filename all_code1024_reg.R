@@ -157,7 +157,7 @@ base_grid <- as(r, 'SpatialGrid')
 depth <- read.csv("~/WP2/data/sampling_depth.csv",header=T) %>% read_pointDataframes(.)
 
 # Define the 1st order polynomial equation
-f_depth <- as.formula(log10(sampling_d+0.01) ~ 1)
+f_depth <- as.formula(sampling_d ~ 1)
 # Add X and Y to training 
 depth<-add_S1S2(depth)
 # Run the regression model
