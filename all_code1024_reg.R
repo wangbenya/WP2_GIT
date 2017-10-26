@@ -395,11 +395,44 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   WP2Test$DON<-log10(WP2Test$DON)
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
+  min_train_DON<-min(WP2Train$DON)
+  max_train_DON<-max(WP2Train$DON)
+  
+  WP2Train$DON<-(WP2Train$DON-min_train_DON)/(max_train_DON-min_train_DON)
+  WP2Test$DON<-(WP2Test$DON-min_train_DON)/(max_train_DON-min_train_DON)
+  
+  sd_train_DON<-sd(WP2Train$DON)
+  mean_train_DON<-mean(WP2Train$DON)
+  
+  WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
+  WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
+  
+  for(i in c(1:6,8,9)){
+    min_train<-min(WP2Train[,i])
+    max_train<-max(WP2Train[,i])
+    
+    WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
+    WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
+    
+    sd_train<-sd(WP2Train[,i])
+    mean_train<-mean(WP2Train[,i])
+    
+    WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
+    WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
+    
+  }
+  
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
 
+  map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
+  map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
+  
+  map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+  map2_predict$data$truth=map2_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
+  
   map2_predict$data$response<-10^map2_predict$data$response
   map2_predict$data$truth<-10^map2_predict$data$truth
 
@@ -516,14 +549,45 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
   M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
+  
+  min_train_DON<-min(M4_train_withKN$DON)
+  max_train_DON<-max(M4_train_withKN$DON)
+  
+  M4_train_withKN$DON<-(M4_train_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
+  M4_test_withKN$DON<-(M4_test_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
+  
+  sd_train_DON<-sd(M4_train_withKN$DON)
+  mean_train_DON<-mean(M4_train_withKN$DON)
+  
+  M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
+  M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
+  
+  for(i in c(1:8,10:16)){
+    min_train<-min(M4_train_withKN[,i])
+    max_train<-max(M4_train_withKN[,i])
+    
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
+    
+    sd_train<-sd(M4_train_withKN[,i])
+    mean_train<-mean(M4_train_withKN[,i])
+    
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    
+  }
+  
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","reg")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   
-  #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
-  #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
+  map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
+  map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
+  
+  map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+  map4_predict$data$truth=map4_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
   
   map4_predict$data$response<-10^map4_predict$data$response
   map4_predict$data$truth<-10^map4_predict$data$truth
@@ -553,4 +617,6 @@ for (a1 in c(0.5,1.0,1.5)){
 }
  }}
 
-
+for (i in seq(1,16)){
+  print(ggplot(data=M4_train_withKN,aes(x=M4_train_withKN[,i]))+geom_density()+labs(x=names(M4_train_withKN)[i]))
+}
