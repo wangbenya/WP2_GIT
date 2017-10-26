@@ -198,7 +198,7 @@ rdesc = makeResampleDesc("CV", iters = 3)
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,800,10)),
   makeIntegerParam("nodesize", lower = 3, upper = 8),
-  makeIntegerParam("mtry", lower = 4, upper = 12)
+  makeIntegerParam("mtry", lower = 4, upper = 8)
 )
 
 model_build <- function(dataset, n_target, method) {
@@ -497,9 +497,19 @@ print(postResample(map1_predict[,2],map1_predict[,1]))
  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
-    
+  M4_train_withKN<-M4_train_withKN[,-c(12,14,15,16)]
+  M4_test_withKN<-M4_test_withKN[,-c(12,14,15,16)]
+  
+  M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
+  M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
+  M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
+  M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
+  
+  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
+  M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
+  M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
+  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
+  
   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
@@ -542,3 +552,5 @@ for (a1 in c(0.5,1.0,1.5)){
   print(sing_acc)
 }
  }}
+
+
