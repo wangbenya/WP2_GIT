@@ -335,8 +335,8 @@ for (tt in c(1:5)){
   
   
   ## M2, using RF to predict the DON
-  landscape_train <- raster::extract(landscapes, training_points,buffer=2000)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=2000)
+  landscape_train <- raster::extract(landscapes, training_points,buffer=1500)
+  landscape_test <- raster::extract(landscapes, testing_points,buffer=1500)
   
   landscape_train<-get_landscape(landscape_train)
   landscape_test<-get_landscape(landscape_test)
