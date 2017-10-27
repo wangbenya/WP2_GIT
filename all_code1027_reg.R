@@ -323,20 +323,20 @@ for (tt in c(1:5)){
   
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
   
-  for (t in c(1,2)){
-   map1_predict[, t][map1_predict[, t] <=1] <- "Low"
-   map1_predict[, t][map1_predict[, t] < 3] <- "Medium"
-   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
-  
-   }
+ # for (t in c(1,2)){
+ #   map1_predict[, t][map1_predict[, t] <=1] <- "Low"
+ #   map1_predict[, t][map1_predict[, t] < 3.5] <- "Medium"
+ #   map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
+ #   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
+    
+#  }
   
   print(postResample(map1_predict[,2],map1_predict[,1]))
   
   
   ## M2, using RF to predict the DON
-  landscape_train <- raster::extract(landscapes, training_points,buffer=1000)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=1000)
+  landscape_train <- raster::extract(landscapes, training_points,buffer=2000)
+  landscape_test <- raster::extract(landscapes, testing_points,buffer=2000)
   
   landscape_train<-get_landscape(landscape_train)
   landscape_test<-get_landscape(landscape_test)
@@ -405,29 +405,29 @@ for (tt in c(1:5)){
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,1,3)
-   WP2Test<-reclass(WP2Test,1,3)
+#  WP2Train<-reclass(WP2Train,1,3.5)
+#  WP2Test<-reclass(WP2Test,1,3.5)
   
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
   
-  #WP2Train$DON<-log10(WP2Train$DON)
+  WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
- # WP2Test$DON<-log10(WP2Test$DON)
+   WP2Test$DON<-log10(WP2Test$DON)
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
- # min_train_DON<-min(WP2Train$DON)
-#  max_train_DON<-max(WP2Train$DON)
+  min_train_DON<-min(WP2Train$DON)
+   max_train_DON<-max(WP2Train$DON)
   
- # WP2Train$DON<-(WP2Train$DON-min_train_DON)/(max_train_DON-min_train_DON)
- # WP2Test$DON<-(WP2Test$DON-min_train_DON)/(max_train_DON-min_train_DON)
+   WP2Train$DON<-(WP2Train$DON-min_train_DON)/(max_train_DON-min_train_DON)
+   WP2Test$DON<-(WP2Test$DON-min_train_DON)/(max_train_DON-min_train_DON)
   
- # sd_train_DON<-sd(WP2Train$DON)
- # mean_train_DON<-mean(WP2Train$DON)
+   sd_train_DON<-sd(WP2Train$DON)
+   mean_train_DON<-mean(WP2Train$DON)
   
- # WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
-  #WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
+   WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
+  WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
   WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
@@ -447,18 +447,18 @@ for (tt in c(1:5)){
   }
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train, "DON","clf")
+  rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
-  #map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
-  #map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
-  #
- # map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
- # map2_predict$data$truth=map2_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
+  map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
+  map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
   
- # map2_predict$data$response<-10^map2_predict$data$response
- # map2_predict$data$truth<-10^map2_predict$data$truth
+   map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+   map2_predict$data$truth=map2_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
+  
+  map2_predict$data$response<-10^map2_predict$data$response
+  map2_predict$data$truth<-10^map2_predict$data$truth
   
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
@@ -548,8 +548,8 @@ for (tt in c(1:5)){
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-   M4_train_withKN<-reclass(M4_train_withKN,1,3)
-   M4_test_withKN<-reclass(M4_test_withKN,1,3)
+  #M4_train_withKN<-reclass(M4_train_withKN,1,3.5)
+  #M4_test_withKN<-reclass(M4_test_withKN,1,3.5)
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
@@ -570,23 +570,23 @@ for (tt in c(1:5)){
   M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
- # M4_train_withKN$DON<-log10(M4_train_withKN$DON)
+   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
- # M4_test_withKN$DON<-log10(M4_test_withKN$DON)
+  M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
- # min_train_DON<-min(M4_train_withKN$DON)
- # max_train_DON<-max(M4_train_withKN$DON)
+   min_train_DON<-min(M4_train_withKN$DON)
+   max_train_DON<-max(M4_train_withKN$DON)
   
- # M4_train_withKN$DON<-(M4_train_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
-#  M4_test_withKN$DON<-(M4_test_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
+  M4_train_withKN$DON<-(M4_train_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
+    M4_test_withKN$DON<-(M4_test_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
   
- # sd_train_DON<-sd(M4_train_withKN$DON)
-#  mean_train_DON<-mean(M4_train_withKN$DON)
+   sd_train_DON<-sd(M4_train_withKN$DON)
+    mean_train_DON<-mean(M4_train_withKN$DON)
   
-#  M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
-#  M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
+   M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
+   M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
   
   for(i in c(1:6,8:15)){
     min_train<-min(M4_train_withKN[,i])
@@ -604,19 +604,19 @@ for (tt in c(1:5)){
   }
   
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON","clf")
+  rf_DON_m4<-model_build(M4_train_withKN,"DON","reg")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   
-#  map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
-#  map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
+    map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
+   map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
   
- # map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
-##  map4_predict$data$truth=map4_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
+  map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+    map4_predict$data$truth=map4_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
   
-#  map4_predict$data$response<-10^map4_predict$data$response
- # map4_predict$data$truth<-10^map4_predict$data$truth
+    map4_predict$data$response<-10^map4_predict$data$response
+   map4_predict$data$truth<-10^map4_predict$data$truth
   
   print(postResample(map4_predict$data$response,map4_predict$data$truth))
   
@@ -627,25 +627,21 @@ for (tt in c(1:5)){
 }
 
 
+
 dim(all_results)
 
-seeds<-unique(all_results$seeds)
-length(seeds)
-all_acc<-data.frame()
+for (a1 in c(0.5,1.0,1.2,1.5)){
+  for (a2 in c(1.0,1.5,2.0,2.4,2.5,3.0,3.5)){
+    if (a2-a1>=0.5){
+      p1<-reclass4(all_results[,c(3,2)],a1,a2)
+      p2<-reclass4(all_results[,c(5,4)],a1,a2)
+      p4<-reclass4(all_results[,c(7,6)],a1,a2)
+      print(table(p1[,2]))
+      sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
+      print(a1)
+      print(a2)
+      print(sing_acc)
+    }
+  }}
 
-for (qq in seeds){
-  sub_data<-subset(all_results,all_results$seeds==qq)
-  print(dim(sub_data))
-  acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
-  acc_2<-postResample(sub_data[,5],sub_data[,4])[1]
-  acc_3<-postResample(sub_data[,7],sub_data[,6])[1]
-  single_acc<-data.frame(qq,acc_1,acc_2,acc_3)
-  all_acc<-rbind(all_acc,single_acc)
-  
-}
 
-print(all_acc)
-
-all_acc2<-melt(all_acc,id="qq")
-lm1<-lm(value~variable,data=all_acc2) %>% aov(.) %>% TukeyHSD (.)
-print(lm1)
