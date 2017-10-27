@@ -324,8 +324,8 @@ for (tt in c(1:5)){
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
   
   for (t in c(1,2)){
-   map1_predict[, t][map1_predict[, t] <=1.5] <- "Low"
-   map1_predict[, t][map1_predict[, t] < 3] <- "Medium"
+   map1_predict[, t][map1_predict[, t] <=1] <- "Low"
+   map1_predict[, t][map1_predict[, t] < 2.5] <- "Medium"
    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
   
@@ -335,8 +335,8 @@ for (tt in c(1:5)){
   
   
   ## M2, using RF to predict the DON
-  landscape_train <- raster::extract(landscapes, training_points,buffer=1500)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=1500)
+  landscape_train <- raster::extract(landscapes, training_points,buffer=1000)
+  landscape_test <- raster::extract(landscapes, testing_points,buffer=1000)
   
   landscape_train<-get_landscape(landscape_train)
   landscape_test<-get_landscape(landscape_test)
@@ -405,8 +405,8 @@ for (tt in c(1:5)){
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,1.5,3)
-   WP2Test<-reclass(WP2Test,1.5,3)
+  WP2Train<-reclass(WP2Train,1,2.5)
+   WP2Test<-reclass(WP2Test,1,2.5)
   
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
@@ -548,8 +548,8 @@ for (tt in c(1:5)){
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-   M4_train_withKN<-reclass(M4_train_withKN,1.5,3)
-   M4_test_withKN<-reclass(M4_test_withKN,1.5,3)
+   M4_train_withKN<-reclass(M4_train_withKN,1,2.5)
+   M4_test_withKN<-reclass(M4_test_withKN,1,2.5)
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
@@ -636,12 +636,11 @@ all_acc<-data.frame()
 for (qq in seeds){
   sub_data<-subset(all_results,all_results$seeds==qq)
   print(dim(sub_data))
-  p1<-reclass4(all_results[,c(3,2)],1.5,3)
-  p2<-reclass4(all_results[,c(5,4)],1.5,3)
-  p4<-reclass4(all_results[,c(7,6)],1.5,3)
-  print(table(p1[,2]))
-  sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
-  all_acc<-rbind(all_acc,sing_acc)
+  acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
+  acc_2<-postResample(sub_data[,5],sub_data[,4])[1]
+  acc_3<-postResample(sub_data[,7],sub_data[,6])[1]
+  single_acc<-data.frame(qq,acc_1,acc_2,acc_3)
+  all_acc<-rbind(all_acc,single_acc)
   
 }
 
@@ -650,4 +649,3 @@ print(all_acc)
 all_acc2<-melt(all_acc,id="qq")
 lm1<-lm(value~variable,data=all_acc2) %>% aov(.) %>% TukeyHSD (.)
 print(lm1)
-plot(lm1)
