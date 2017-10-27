@@ -270,7 +270,7 @@ model_build <- function(dataset, n_target, method) {
 }
 
 ## load the data 
-all_results<-data.frame()
+# all_results<-data.frame()
 set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
@@ -285,7 +285,10 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (tt in c(1:5)){
+for (buff in c(500,1000,1500,2000,2500,5000,10000)){
+print(buff)
+all_results<-data.frame()
+for (tt in c(1:10)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -335,8 +338,8 @@ for (tt in c(1:5)){
   
   
   ## M2, using RF to predict the DON
-  landscape_train <- raster::extract(landscapes, training_points,buffer=2000)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=2000)
+  landscape_train <- raster::extract(landscapes, training_points,buffer=buff)
+  landscape_test <- raster::extract(landscapes, testing_points,buffer=buff)
   
   landscape_train<-get_landscape(landscape_train)
   landscape_test<-get_landscape(landscape_test)
@@ -625,7 +628,9 @@ for (tt in c(1:5)){
   all_results<-rbind(all_results,predict_results)
   
 }
+write.csv(all_results,file=paste0("~/WP2/data/",as.character(buff),".csv"),row.names=F)
 
+}
 
 
 dim(all_results)
