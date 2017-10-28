@@ -287,7 +287,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 
 all_results<-data.frame()
-for (tt in c(1:10)){
+for (tt in c(1:30)){
   
   print(tt)
   seeds<-seed.list[tt]
