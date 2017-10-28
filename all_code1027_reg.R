@@ -408,8 +408,8 @@ for (tt in c(1:10)){
 #  WP2Train<-reclass(WP2Train,1,3.5)
 #  WP2Test<-reclass(WP2Test,1,3.5)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
+  WP2Train<-WP2Train[,-c(4,5,10,11)]
+  WP2Test<-WP2Test[,-c(4,5,10,11)]
   
   WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
@@ -428,10 +428,10 @@ for (tt in c(1:10)){
   
    WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
   WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
-  WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
-  WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
+  #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
+  #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-  for(i in c(1:6,8,10)){
+  for(i in c(1:6)){
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
     
@@ -554,8 +554,8 @@ for (tt in c(1:10)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12,14,15)]
   
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -567,10 +567,10 @@ for (tt in c(1:10)){
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
-  M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
+  #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
+  #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
-   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
+  M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -588,7 +588,7 @@ for (tt in c(1:10)){
    M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
    M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
   
-  for(i in c(1:6,8:16)){
+  for(i in c(1:6,8:14)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
