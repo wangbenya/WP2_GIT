@@ -285,10 +285,10 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (buff in c(500,1000,1500,2000,2500,5000,10000)){
+for (buff in c(200,400,800,1000)){
 print(buff)
 all_results<-data.frame()
-for (tt in c(1:10)){
+for (tt in c(1:20)){
   
   print(tt)
   seeds<-seed.list[tt]
