@@ -285,10 +285,9 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
-for (buff in c(400,800,1000)){
-print(buff)
+
 all_results<-data.frame()
-for (tt in c(1:20)){
+for (tt in c(1:10)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -336,14 +335,12 @@ for (tt in c(1:20)){
   
   print(postResample(map1_predict[,2],map1_predict[,1]))
   
-  
   ## M2, using RF to predict the DON
-  landscape_train <- raster::extract(landscapes, training_points,buffer=buff)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=buff)
+  landscape_train <- raster::extract(landscapes, training_points,buffer=800)
+  landscape_test <- raster::extract(landscapes, testing_points,buffer=800)
   
   landscape_train<-get_landscape(landscape_train)
   landscape_test<-get_landscape(landscape_test)
-  
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Longitude","Latitude")])
   M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Longitude","Latitude")])
@@ -557,8 +554,8 @@ for (tt in c(1:20)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15,16)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15,16)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
   
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -591,7 +588,7 @@ for (tt in c(1:20)){
    M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
    M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
   
-  for(i in c(1:6,8:15)){
+  for(i in c(1:6,8:16)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -628,15 +625,14 @@ for (tt in c(1:20)){
   all_results<-rbind(all_results,predict_results)
   
 }
-write.csv(all_results,file=paste0("~/WP2/data/",as.character(buff),".csv"),row.names=F)
+#write.csv(all_results,file=paste0("~/WP2/data/",as.character(buff),".csv"),row.names=F)
 
-}
 
 
 dim(all_results)
 
-for (a1 in c(0.5,1.0,1.2,1.5)){
-  for (a2 in c(1.0,1.5,2.0,2.4,2.5,3.0,3.5)){
+for (a1 in c(0.5,1.0,1.5)){
+  for (a2 in c(1.0,1.5,2.0,2.5,3.0,3.5)){
     if (a2-a1>=0.5){
       p1<-reclass4(all_results[,c(3,2)],a1,a2)
       p2<-reclass4(all_results[,c(5,4)],a1,a2)
