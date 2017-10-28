@@ -453,8 +453,8 @@ for (tt in c(1:20)){
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
-  map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
-  map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
+  #map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
+  #map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
   
   # map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
   # map2_predict$data$truth=map2_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
