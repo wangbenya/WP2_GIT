@@ -287,14 +287,14 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 
 all_results<-data.frame()
-for (tt in c(1:10)){
+#for (tt in c(1:30)){
   
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
   trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
   
-  training <- all_points[trainIndex,]
+  training <- all_points
   testing <- all_points[-trainIndex,]
   
   ## load the point data 
@@ -323,27 +323,6 @@ for (tt in c(1:10)){
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
   dat.krg_DON<-kriging_DON_m1
   
-  WGS84_2 <- CRS("+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs")
-  #convert the raster to points for plotting
-  map1.p <- rasterToPoints(map1)
-  #Make the points a dataframe for ggplot
-  map1_df <- data.frame(map1.p)
-  #Make appropriate column headings
-  colnames(map1_df) <- c("Longitude", "Latitude", "DON")
-  
-  map1_df<-reclass(map1_df,1.5,3)
-  
-  #Now make the map
-  ggplot(data = map1_df, aes(y = Latitude, x = Longitude)) +
-    geom_raster(aes(fill = DON)) + theme_bw() +
-    coord_equal() +
-    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"),
-                      name = "DON mg/L",
-                      breaks = c("Low", "Medium", "High"),
-                      labels = c("Low", "Medium", "High")) 
-
-
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
   
  # for (t in c(1,2)){
@@ -429,8 +408,8 @@ for (tt in c(1:10)){
 #  WP2Train<-reclass(WP2Train,1,3.5)
 #  WP2Test<-reclass(WP2Test,1,3.5)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
+  WP2Train<-WP2Train[,-c(4,5,10,11)]
+  WP2Test<-WP2Test[,-c(4,5,10,11)]
   
   WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
@@ -449,10 +428,10 @@ for (tt in c(1:10)){
   
    WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
   WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
-  WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
-  WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
+  #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
+  #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-  for(i in c(1:6,8,10)){
+  for(i in c(1:6)){
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
     
@@ -470,7 +449,89 @@ for (tt in c(1:10)){
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train, "DON","reg")
   
-  map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
+  ## scale the dataset using training data 
+  name_list <- list("Soil", "Veg", "Landuse", "SS", "GS", "Catchment", "GW_depth", "Distance", "DON")
+  value_list <- list(b1,b2,b3,b4,b5,b6)
+  value_max_list <-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
+  
+  for (i in seq(1, 6)) {
+    sub_layer <- landscapes@layers[[i]]
+    sub_data <- as.data.frame(sub_layer) 
+    print(i)
+    for (q in seq(1, 37044)) {
+      print(q)
+      if ((is.numeric(sub_data[q, ])) & (sub_data[q, ] %in% value_list[[i]][, 1])) {
+        sub_data[q,] <- value_list[[i]][value_list[[i]][name_list[[i]]] == sub_data[q,], 2]
+      } else if ((is.numeric(sub_data[q, ])) & (!(sub_data[q, ] %in% value_list[[i]][, 1]))) {
+        sub_data[q,] <- value_max_list[[i]]
+      }
+    }
+    values(landscapes@layers[[i]]) <- sub_data[, 1]
+    names(landscapes@layers[[i]]) <- name_list[[i]]
+  }
+  
+  plot(landscapes)
+  
+  for (i in seq(1, 8)) {
+    landscapes@layers[[i]] <- raster::mask(landscapes@layers[[i]],study_area)
+  }
+  
+  plot(landscapes)
+  
+  v_landscapes<-as.data.frame(values(landscapes))
+  v_landscapes$Distance<-log10(v_landscapes$Distance+0.01)
+  
+  for(i in c(1:8)){
+    min_train<-min(v_landscapes[,i])
+    max_train<-max(v_landscapes[,i])
+    
+    v_landscapes[,i]<-(v_landscapes[,i]-min_train)/(max_train-min_train)
+
+    sd_train<-sd(v_landscapes[,i])
+    mean_train<-mean(v_landscapes[,i])
+    
+    v_landscapes[,i]<-(v_landscapes[,i]-mean_train)/sd_train
+
+  }
+  
+  head(v_landscapes)
+  v_landscapes<-v_landscapes[,-c(4,5)]
+  
+  map2_predict <- predict(rf_DON_m2, newdata = v_landscapes)
+  
+  map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
+
+  map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+
+  map2_predict$data$response<-10^map2_predict$data$response
+
+  plot(depth_k2)
+  
+  values(depth_k2)<-map2_predict$data$response
+  
+  
+  #convert the raster to points for plotting
+  map1.p <- rasterToPoints(depth_k2)
+  #Make the points a dataframe for ggplot
+  map1_df <- data.frame(map1.p)
+  #Make appropriate column headings
+  colnames(map1_df) <- c("Longitude", "Latitude", "DON")
+  
+  map1_df<-reclass(map1_df,1.5,3)
+  
+  #Now make the map
+  ggplot(data = map1_df, aes(y = Latitude, x = Longitude)) +
+    geom_raster(aes(fill = DON)) + theme_bw() +
+    coord_equal() +
+    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+    scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"),
+                      name = "DON mg/L",
+                      breaks = c("Low", "Medium", "High"),
+                      labels = c("Low", "Medium", "High")) 
+  
+  
+  
+  
   
   map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
   map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
@@ -575,8 +636,8 @@ for (tt in c(1:10)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12,14,15)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12,14,15)]
   
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -588,10 +649,10 @@ for (tt in c(1:10)){
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
-  M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
+  #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
+  #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
-   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
+  M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -609,7 +670,7 @@ for (tt in c(1:10)){
    M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
    M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
   
-  for(i in c(1:6,8:16)){
+  for(i in c(1:6,8:14)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
