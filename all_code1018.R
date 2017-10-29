@@ -467,15 +467,16 @@ all_acc<-data.frame()
 for (qq in seeds){
   print(qq)
   sub_data<-subset(all_results,all_results$seeds==qq)   
-  #p1<-reclass4(sub_data[,c(3,2)],0.5,1.0)
-  #p2<-reclass4(sub_data[,c(5,4)],0.5,1.0)
-  p4<-reclass4(sub_data[,c(3,2)],0.5,1.0)
+  p1<-reclass4(sub_data[,c(3,2)],1.5,3)
+  p2<-reclass4(sub_data[,c(5,4)],1.5,3)
+  p4<-reclass4(sub_data[,c(3,2)],1.5,3)
   print(table(p4[,2]))
   # print(table(p2[,2]))
   #  print(table(p4[,2]))
-  sing_acc<-data.frame(p4=postResample(p4[,1],p4[,2])[1])
+  sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
   
   all_acc<-rbind(all_acc,sing_acc)
 }
 
 print(all_acc)
+
