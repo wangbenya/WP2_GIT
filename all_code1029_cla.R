@@ -240,10 +240,11 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 for (i1 in c(0.2,0.4,0.1)){
   for (i2 in c(0.2,0.3)){
     for (i3 in seq(0.4,0.6,0.1)){
+      
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.randomForest",predict.type = "prob",predict.threshold = c(Low=0.1,Medium=0.1,High=0.4))
+      class_rf = makeLearner("classif.randomForest",predict.type = "prob",predict.threshold = c(Low=0.3,Medium=0.5,High=0.4))
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       
@@ -291,7 +292,7 @@ for (i1 in c(0.2,0.4,0.1)){
     all_results<-data.frame()
     a1=0.5
     a2=1.5
-       for (tt in c(1:5)){
+       for (tt in c(1:50)){
   
   print(tt)
   seeds<-seed.list[tt]
