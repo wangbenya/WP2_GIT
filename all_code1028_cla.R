@@ -201,7 +201,7 @@ lm.depth <- lm(f_depth, data = depth)
 # variogram on the de-trended data.
 var.depth <- variogram(f_depth, depth)
 #plot(var.depth)
-dat.fit_depth <- fit.variogram(var.depth,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+dat.fit_depth <- fit.variogram(var.depth,vgm(c("Sph","Exp")))
 #plot(var.depth, dat.fit_depth, xlim = c(0, 40000))
 # created in the earlier step)
 depth_k <- krige(f_depth, depth, base_grid, dat.fit_depth) %>% raster(.) %>% raster::mask(., study_area)
@@ -224,7 +224,7 @@ set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #reg_rf$par.vals<-list(importance=T)
 
-class_rf = makeLearner("classif.randomForest")
+class_rf = makeLearner("classif.randomForest",predict.type="prob")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 200L)
 
@@ -234,7 +234,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,800,10)),
   makeIntegerParam("nodesize", lower = 3, upper = 8),
-  makeIntegerParam("mtry", lower = 4, upper = 12)
+  makeIntegerParam("mtry", lower = 4, upper = 10)
 )
 
 model_build <- function(dataset, n_target, method) {
@@ -287,12 +287,16 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 
 all_results<-data.frame()
+
+a1=1.0
+a2=2.0
+
 for (tt in c(1:20)){
   
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
   
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
@@ -315,7 +319,7 @@ for (tt in c(1:20)){
   var.smpl1 <- variogram(f.1, training_df)
   #plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp")))
   
   #plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
@@ -326,8 +330,8 @@ for (tt in c(1:20)){
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
   
   for (t in c(1,2)){
-    map1_predict[, t][map1_predict[, t] <=1.5] <- "Low"
-    map1_predict[, t][map1_predict[, t] < 3] <- "Medium"
+    map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
+    map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
     map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
     map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
     
@@ -407,29 +411,16 @@ for (tt in c(1:20)){
   names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,1.5,3)
-  WP2Test<-reclass(WP2Test,1.5,3)
+  WP2Train<-reclass(WP2Train,a1,a2)
+  WP2Test<-reclass(WP2Test,a1,a2)
   
   WP2Train<-WP2Train[,-c(4,5)]
   WP2Test<-WP2Test[,-c(4,5)]
   
-  #WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
-   #WP2Test$DON<-log10(WP2Test$DON)
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  #min_train_DON<-min(WP2Train$DON)
-   #max_train_DON<-max(WP2Train$DON)
-  
-   #WP2Train$DON<-(WP2Train$DON-min_train_DON)/(max_train_DON-min_train_DON)
-   #WP2Test$DON<-(WP2Test$DON-min_train_DON)/(max_train_DON-min_train_DON)
-  
-   #sd_train_DON<-sd(WP2Train$DON)
-   #mean_train_DON<-mean(WP2Train$DON)
-  
-   #WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
-  #WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
   WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
@@ -453,15 +444,6 @@ for (tt in c(1:20)){
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
-  #map2_predict$data$response=map2_predict$data$response*sd_train_DON+mean_train_DON
-  #map2_predict$data$truth=map2_predict$data$truth*sd_train_DON+mean_train_DON
-  
-  # map2_predict$data$response=map2_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
-  # map2_predict$data$truth=map2_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
-  
-  #map2_predict$data$response<-10^map2_predict$data$response
-  #map2_predict$data$truth<-10^map2_predict$data$truth
-  
   print(postResample(map2_predict$data$response, map2_predict$data$truth))
   
   ## map4, kriging first and then rf
@@ -475,7 +457,7 @@ for (tt in c(1:20)){
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
   plot(var.smpl_DOC)
   
-  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp")))
   plot(var.smpl_DOC,dat.fit_DOC)
   # Perform the krige interpolation (note the use of the variogram model
   dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
@@ -493,7 +475,7 @@ for (tt in c(1:20)){
   plot(var.smpl_NH4)
   
   #plot(var.smpl_NH4)
-  dat.fit_NH4 <- fit.variogram(var.smpl_NH4, vgm(c("Exp","Sph","Gau","Lin","Spl")))
+  dat.fit_NH4 <- fit.variogram(var.smpl_NH4, vgm(c("Exp","Sph")))
   plot(var.smpl_NH4,dat.fit_NH4)
   # Perform the krige interpolation (note the use of the variogram model
   dat.krg_NH4 <- krige(f.NH4, training_NH4, base_grid, dat.fit_NH4) %>% raster(.) %>% raster::mask(., study_area)
@@ -510,31 +492,15 @@ for (tt in c(1:20)){
   var.smpl_NOx <- variogram(f.NOx, training_NOx)
   plot(var.smpl_NOx)
   
-  dat.fit_NOx <- fit.variogram(var.smpl_NOx,vgm(c("Sph","Exp","Gau","Lin","Spl")))
+  dat.fit_NOx <- fit.variogram(var.smpl_NOx,vgm(c("Sph","Exp")))
   # Perform the krige interpolation 
   plot(var.smpl_NOx,dat.fit_NOx)
   dat.krg_NOx <- krige(f.NOx, training_NOx, base_grid, dat.fit_NOx) %>% raster(.) %>% raster::mask(., study_area)
   values(dat.krg_NOx) <- 10 ^ (values(dat.krg_NOx))
-  
-  
-  # kriging for TN
-  f.TN <- as.formula(log10(TN) ~ 1)
-  
-  training_TN <- TN_GW4 %>% read_pointDataframes(.) 
-  training_TN<-add_S1S2(training_TN)
-  
-  var.smpl_TN <- variogram(f.TN, training_TN)
-  plot(var.smpl_TN)
-  
-  dat.fit_TN <- fit.variogram(var.smpl_TN,vgm(c("Sph","Exp","Gau","Lin","Spl")))
-  plot(var.smpl_TN,dat.fit_TN)
-  # Perform the krige interpolation 
-  dat.krg_TN <- krige(f.TN, training_TN, base_grid, dat.fit_TN) %>% raster(.) %>% raster::mask(., study_area)
-  values(dat.krg_TN) <- 10 ^ (values(dat.krg_TN))
-  
+   
   ## create rasterstack with kriging data
-  kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC, dat.krg_NH4, dat.krg_NOx,dat.krg_TN)
-  names(kriging_nutrietn) <- c("DON_k", "DOC_k", "NH4_k", "NOx_k","TN_k")
+  kriging_nutrietn<-stack(dat.krg_DOC, dat.krg_NH4, dat.krg_NOx)
+  names(kriging_nutrietn) <- c("DOC_k", "NH4_k", "NOx_k")
   
   ## extract the data from landscapes_withN
   landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
@@ -550,11 +516,8 @@ for (tt in c(1:20)){
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  M4_train_withKN<-reclass(M4_train_withKN,1.5,3)
-  M4_test_withKN<-reclass(M4_test_withKN,1.5,3)
-  
-  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
-  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
+  M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
+  M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
   
   M4_train_withKN<-M4_train_withKN[,-c(4,5,12,14,15,16)]
   M4_test_withKN<-M4_test_withKN[,-c(4,5,12,14,15,16)]
@@ -572,24 +535,10 @@ for (tt in c(1:20)){
   M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
-#   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
- # M4_test_withKN$DON<-log10(M4_test_withKN$DON)
-  
-  # min_train_DON<-min(M4_train_withKN$DON)
-   #max_train_DON<-max(M4_train_withKN$DON)
-  
-  #M4_train_withKN$DON<-(M4_train_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
-   # M4_test_withKN$DON<-(M4_test_withKN$DON-min_train_DON)/(max_train_DON-min_train_DON)
-  
-  # sd_train_DON<-sd(M4_train_withKN$DON)
-   # mean_train_DON<-mean(M4_train_withKN$DON)
-  
-  # M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
-  # M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
-  
+    
   for(i in c(1:6,8:15)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
@@ -608,17 +557,7 @@ for (tt in c(1:20)){
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","cla")
   
-  ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
-  
-  #map4_predict$data$response=map4_predict$data$response*sd_train_DON+mean_train_DON
-  #map4_predict$data$truth=map4_predict$data$truth*sd_train_DON+mean_train_DON
-  
-  #map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
-   # map4_predict$data$truth=map4_predict$data$truth*(max_train_DON-min_train_DON)+min_train_DON
-  
-    #map4_predict$data$response<-10^map4_predict$data$response
-   #map4_predict$data$truth<-10^map4_predict$data$truth
   
   print(postResample(map4_predict$data$response,map4_predict$data$truth))
   
@@ -627,7 +566,6 @@ for (tt in c(1:20)){
   all_results<-rbind(all_results,predict_results)
   
 }
-#write.csv(all_results,file=paste0("~/WP2/data/",as.character(buff),".csv"),row.names=F)
 
 
 dim(all_results)
