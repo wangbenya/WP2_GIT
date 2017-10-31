@@ -529,7 +529,7 @@ for (tt in c(1:50)){
   #  
   M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
-  sing_acc<-data.frame(i1,i2,i3,M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_kappa<-rbind(all_results,sing_acc)
 
@@ -537,6 +537,6 @@ for (tt in c(1:50)){
   
     }
     
-  write.csv(all_results,file=paste0("~/WP2/data/",as.character(i1),"_",as.character(i2),"_",as.character(i3),".csv"),row.names=F)
+  write.csv(all_results,file="~/WP2/data/all_result1031.csv",row.names=F)
   
 

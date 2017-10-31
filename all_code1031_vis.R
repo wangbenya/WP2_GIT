@@ -245,7 +245,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       class_rf = makeLearner("classif.randomForest",predict.type = "prob")
       #class_rf = makeLearner("classif.randomForest",predict.type = "prob")
       
-      #class_rf$par.vals<-list(importance=T)
+      class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       
       rdesc = makeResampleDesc("CV", iters = 5)
@@ -303,8 +303,6 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   f.1 <- as.formula(log10(DON) ~ 1)
   # Add X and Y to training 
   training_df<-add_S1S2(training_df)
-  testing_df<-add_S1S2(testing_df)
-  
   # Compute the sample variogram; note that the f.1 trend model is one of the
   var.smpl1 <- variogram(f.1, training_df)
   #plot(var.smpl1)
@@ -318,14 +316,6 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   dat.krg_DON<-kriging_DON_m1
   
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-  
-  for (t in c(1,2)){
-    map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
-    map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
-    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
-    
-  }
   
   #convert the raster to points for plotting
   DON_map1_2<-raster::mask(kriging_DON_m1,study_area_withW)
@@ -350,16 +340,11 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
-  landscape_test <- raster::extract(landscapes, testing_points,buffer=800)
-  
+
   landscape_train<-get_landscape(landscape_train)
-  landscape_test<-get_landscape(landscape_test)
-  
+
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Longitude","Latitude")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Longitude","Latitude")])
-  
-  names(M2_train) <- colnames(M2_test)
-  
+
   b1<-transCat(1)
   b2<-transCat(2)
   b3<-transCat(3)
@@ -396,7 +381,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   WP2Train<-WP2Train[,-c(4,5,10,11)]
   
-   ## scale the dataset using training data 
+  ## scale the dataset using training data 
   name_list <- list("Soil", "Veg", "Landuse", "SS", "GS", "Catchment", "GW_depth", "Distance", "DON")
   value_list <- list(b1,b2,b3,b4,b5,b6)
   value_max_list <-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
@@ -423,7 +408,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
   WP2Train_raster<-stack(landscapes[[1]],landscapes[[2]],landscapes[[3]],landscapes[[6]],landscapes[[7]],landscapes[[8]])
   WP2Train_v<-as.data.frame(values(WP2Train_raster))
-  WP2Train_v$Distance_to_water<-log10(WP2Train_v$Distance_to_water+0.01)
+  WP2Train_v$Distance<-log10(WP2Train_v$Distance+0.01)
     
   for(i in c(1:6)){
     names(WP2Train_raster@layers[[i]]) <- names(WP2Train)[i]
@@ -478,7 +463,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp")))
   plot(var.smpl_DOC,dat.fit_DOC)
   # Perform the krige interpolation (note the use of the variogram model
-  dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
+  dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) 
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
@@ -494,24 +479,34 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   ## build the model for map2
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  M4_train_withKN<-reclass(M4_train_withKN,a1,a2) %>% M4_train_withKN[,-c(4,5,10,11)]
-  M4_train_withKN<-
-  
+  M4_train_withKN<-reclass(M4_train_withKN,a1,a2) %>% .[,-c(4,5,10,11)]
+
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
   M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
   M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
   
-  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
-  M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
-  M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
-  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
+  DOC_SOIL<-dat.krg_DOC
+  DOC_VEG<-dat.krg_DOC
+  DOC_LAND<-dat.krg_DOC
+  DOC_CAT<-dat.krg_DOC
+  
+  values(DOC_SOIL)<-values(dat.krg_DOC)*values(WP2Train_raster[[1]])
+  values(DOC_VEG)<-values(dat.krg_DOC)*values(WP2Train_raster[[2]])
+  values(DOC_LAND)<-values(dat.krg_DOC)*values(WP2Train_raster[[3]])
+  values(DOC_CAT)<-values(dat.krg_DOC)*values(WP2Train_raster[[4]])
+  
+  M4_stack<-stack(WP2Train_raster[[1]],WP2Train_raster[[2]],WP2Train_raster[[3]],WP2Train_raster[[4]],WP2Train_raster[[5]],WP2Train_raster[[6]],dat.krg_DOC,DOC_SOIL,DOC_VEG,DOC_LAND,DOC_CAT)
+  M4_stack_v<-as.data.frame(values(M4_stack))
+  
+  M4_train_withKN<-M4_train_withKN[,c(1:6,8:12,7)]
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
-  M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
- # M4_test_withKN$DON<-log10(M4_test_withKN$DON)
+  M4_stack_v$Distance<-log10(M4_stack_v$Distance+0.01)
+  # M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
   for(i in c(1:11)){
+    names(M4_stack_v)[i]<-names(M4_train_withKN)[i]
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -526,7 +521,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     
   }
   
-  set.seed(seeds)
+  set.seed(35)
   rf_DON_m4<-model_build(M4_train_withKN,"DON","cla")
   
   ## map3 predict accuracy
@@ -555,10 +550,10 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   high_area[high_area$DON==2,]<-1
 
   ggplot(data = map4_df, aes(y = map4_df$Latitude, x = map4_df$Longitude)) +
-    geom_raster(aes(fill = as.factor(high_area2$DON))) + theme_bw() +
+    geom_raster(aes(fill = as.factor(high_area$DON))) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_manual(values = c("#56B4E9","#999999"),
+    scale_fill_manual(values = c("#999999","#56B4E9"),
                       name = "DON mg/L",
                       breaks = c("Low", "Medium", "High"),
                       labels = c("Low", "Medium", "High")) 
@@ -574,20 +569,21 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   map_un_df<-raster::mask(map_uncertainty,study_area_withW) %>% rasterToPoints(.) %>% data.frame(.)
   
   ggplot(data = map4_df, aes(y = map4_df$Latitude, x = map4_df$Longitude)) +
-    geom_raster(aes(fill = map_un_df$uncertainty)) + theme_bw() +
+    geom_raster(aes(fill = map_un_df$var1.pred)) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())
- # map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
+ 
+  # map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
   high_area2<-high_area
-  high_area2$uncertianty <-m4_p$uncertainty
-  high_area2$risk <-m4_p$uncertainty
-  high_area2$needSamp <-m4_p$uncertainty
+  high_area2$uncertianty <-map_un_df$var1.pred
+  high_area2$risk <-map_un_df$var1.pred
+  high_area2$needSamp <-map_un_df$var1.pred
 
-  high_area2[(high_area2$DON==3)&(high_area2$uncertainty<=0.2),"risk"]<-"High"
-  high_area2[high_area2$risk!="High","risk"]<-"Low"
-
-  high_area2[(high_area2$DON!=1)&(high_area2$uncertainty>=0.5),"needSamp"]<-"More_data"
-  high_area2[high_area2$needSamp!="More_data","needSamp"]<-"No_need"
+  high_area2[, "risk"][(high_area2[, "DON"] ==3)&(high_area2[,"uncertianty"]<=0.3)] <- "High_risk"
+  high_area2[, "risk"][high_area2[, "risk"] !="High_risk"] <- "No_risk"
+  
+  high_area2[, "needSamp"][(high_area2[, "DON"] !=1)&(high_area2[,"uncertianty"]>=0.5)] <- "More_data"
+  high_area2[, "needSamp"][high_area2[, "needSamp"] !="More_data"] <- "No_need"
   
   ## get high DON area with low uncertatiy 
   ggplot(data = map4_df, aes(y = map4_df$Latitude, x = map4_df$Longitude)) +
