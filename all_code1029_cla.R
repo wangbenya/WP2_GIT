@@ -531,7 +531,7 @@ for (tt in c(1:50)){
   M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
-  all_kappa<-rbind(all_results,sing_acc)
+  all_results<-rbind(all_results,sing_acc)
 
   print(all_results)
   
