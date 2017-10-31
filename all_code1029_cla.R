@@ -335,8 +335,8 @@ for (i1 in c(0.2,0.4,0.1)){
   for (t in c(1,2)){
     map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
     map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
-  map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-   map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
+    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
+    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
     
   }
   
