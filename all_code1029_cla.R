@@ -244,7 +244,9 @@ for (i1 in c(0.2,0.4,0.1)){
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.randomForest",predict.type = "prob",predict.threshold = c(Low=0.3,Medium=0.5,High=0.4))
+      class_rf = makeLearner("classif.randomForest",predict.type = "prob")
+      #class_rf = makeLearner("classif.randomForest",predict.type = "prob")
+      
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       
@@ -290,16 +292,16 @@ for (i1 in c(0.2,0.4,0.1)){
       }
       
     all_results<-data.frame()
-    a1=0.5
-    a2=1.5
-       for (tt in c(1:50)){
+    a1=1
+    a2=2
+       #for (tt in c(1:50)){
   
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
   
-  training <- all_points[trainIndex,]
+  training <- all_points
   testing <- all_points[-trainIndex,]
   
   ## load the point data 
@@ -413,8 +415,8 @@ for (i1 in c(0.2,0.4,0.1)){
   WP2Train<-reclass(WP2Train,a1,a2)
   WP2Test<-reclass(WP2Test,a1,a2)
   
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
+  WP2Train<-WP2Train[,-c(4,5)]
+  WP2Test<-WP2Test[,-c(4,5)]
   
 #  WP2Train$DON<-log10(WP2Train$DON)
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
@@ -433,10 +435,10 @@ for (i1 in c(0.2,0.4,0.1)){
   
 # WP2Train$DON<-(WP2Train$DON-mean_train_DON)/sd_train_DON
  # WP2Test$DON<-(WP2Test$DON-mean_train_DON)/sd_train_DON
-  #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
-  #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
+  WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
+  WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-  for(i in c(1:6)){
+  for(i in c(1:6,8:10)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -509,8 +511,8 @@ for (i1 in c(0.2,0.4,0.1)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5)]
   
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -522,8 +524,8 @@ for (i1 in c(0.2,0.4,0.1)){
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
-  #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
+  M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
+  M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
  # M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
@@ -543,7 +545,7 @@ for (i1 in c(0.2,0.4,0.1)){
  #  M4_train_withKN$DON<-(M4_train_withKN$DON-mean_train_DON)/sd_train_DON
  #  M4_test_withKN$DON<-(M4_test_withKN$DON-mean_train_DON)/sd_train_DON
   
-  for(i in c(1:6,8:12)){
+  for(i in c(1:6,8:15)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     

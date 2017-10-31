@@ -651,19 +651,52 @@ for (a1 in c(0.5,0.6,0.8,1.0)){
     }
   }}
 
-all_results<-read.csv("~/WP2/data/1.5_3.csv",header=TRUE)
+all_results<-read.csv("~/WP2/data/1_2.5.csv",header=TRUE)
 for (i in c(2:7)){
   all_results[, i] <- factor(all_results[, i], levels = c("Low", "Medium", "High"))
 }
-acc_1<-postResample(all_results[,3],all_results[,2])[1]
-acc_2<-postResample(all_results[,5],all_results[,4])[1]
-acc_3<-postResample(all_results[,7],all_results[,6])[1]
-single_acc<-data.frame(acc_1,acc_2,acc_3)
-single_acc
+
+all_acc<-data.frame()
 
 
-p1<-reclass4(all_results[,c(3,2)],a1,a2)
-p2<-reclass4(all_results[,c(5,4)],a1,a2)
-p4<-reclass4(all_results[,c(7,6)],a1,a2)
-print(table(p1[,2]))
-sing_acc<-data.frame(p1=postResample(p1[,1],p1[,2])[1],p2=postResample(p2[,1],p2[,2])[1],p4=postResample(p4[,1],p4[,2])[1])
+for (qq in unique(all_results$seeds)){
+  sub_data<-subset(all_results,all_results$seeds==qq)
+acc_1<-postResample(sub_data[,3],sub_data[,2])[1]
+acc_2<-postResample(sub_data[,5],sub_data[,4])[1]
+acc_3<-postResample(sub_data[,7],sub_data[,6])[1]
+single_acc<-data.frame(qq,acc_1,acc_2,acc_3)
+all_acc<-rbind(all_acc,single_acc)
+}
+
+all_acc
+
+p1<-postResample(all_results[,c(3)],all_results[,c(2)])[1]
+p2<-postResample(all_results[,c(5)],all_results[,c(4)])[1]
+p4<-postResample(all_results[,c(7)],all_results[,c(6)])[1]
+print(table(p1))
+data.frame(p1,p2,p4)
+
+
+org_acc<-postResample(map1_predict$predicted_DON,map1_predict$observed_DON)[1]
+M1_p<-all_results[,c(2,3)]
+M2_p<-all_results[,c(4,8)]
+M4_p<-all_results[,c(9,13)]
+
+
+for (i1 in seq(0,0.1,0.1)){
+  for (i2 in seq(0,1,0.1)){
+    for (i3 in seq(0,1,0.1)){
+      threshold<-c(Low=i1,Medium=i2,High=i3)
+      pred2<-setThreshold(map2_predict,threshold)
+      new_acc2<-postResample(pred2$data$response,pred2$data$truth)[1]
+      
+      pred4<-setThreshold(map4_predict,threshold)
+      new_acc4<-postResample(pred4$data$response,pred4$data$truth)[1]
+      if (new_acc4>0.6){
+        print(c(i1,i2,i3))
+        print(c(M1_ACC,new_acc2,new_acc4))
+      }
+    }
+  }
+}
+
