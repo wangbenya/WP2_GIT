@@ -440,7 +440,7 @@ for (tt in c(1:50)){
   }
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train,"cla",2)
+  rf_DON_m2 <- model_build(WP2Train,"DON",2)
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
