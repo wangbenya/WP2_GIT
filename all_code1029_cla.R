@@ -465,8 +465,8 @@ for (tt in c(1:50)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC)
-  names(kriging_nutrietn) <- c("DON_k","DOC_k")
+  kriging_nutrietn<-stack(dat.krg_DOC)
+  names(kriging_nutrietn) <- c("DOC_k")
   
   ## extract the data from landscapes_withN
   landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
@@ -509,7 +509,7 @@ for (tt in c(1:50)){
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
    
-  for(i in c(1:6,8:13)){
+  for(i in c(1:6,8:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
