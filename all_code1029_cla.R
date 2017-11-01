@@ -246,34 +246,37 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF
-      para_rf = makeParamSet(
+      para_rf1 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
         makeIntegerParam("mtry", lower = 4, upper = 8)
       )
       
-      model_build <- function(dataset, n_target, method) {
+      para_rf2 = makeParamSet(
+        makeDiscreteParam("ntree", values=seq(200,800,10)),
+        makeIntegerParam("nodesize", lower = 3, upper = 8),
+        makeIntegerParam("mtry", lower = 4, upper = 12)
+      )
+
+      model_build <- function(dataset, n_target,nn) {
         set.seed(35)
-        if (method == "reg") {
+        if (nn == 2) {
           ## define the regression task for DON 
-          WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
+          WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
-          ## tune the parameters for rf and xgboost
-          res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                                   show.info = FALSE, measures = rsq)
-          
-          ## set the hyperparameter for rf and xgboost 
-          lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
-          
+          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf1, control = ctrl,
+                                   show.info = FALSE, measures = acc)
+          lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
+
         } else {
           ## define the regression task for DON 
           WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
-          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf2, control = ctrl,
                                    show.info = FALSE, measures = acc)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
         }
@@ -437,7 +440,7 @@ for (tt in c(1:50)){
   }
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train, "DON","cla")
+  rf_DON_m2 <- model_build(WP2Train,"cla",2)
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
@@ -522,7 +525,7 @@ for (tt in c(1:50)){
    }
   
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON","cla")
+  rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
