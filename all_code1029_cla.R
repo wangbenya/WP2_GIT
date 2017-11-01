@@ -286,12 +286,17 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
-      
+  
+thres<-rbind(c(0.5,1.0),c(1.0,2.0),c(1.0,2.5),c(0.5,1.5),c(0.6,1.2))
+    
+for (thr in c(1:5)) {
     all_results<-data.frame()
-    a1=1
-    a2=2
+    a1=thres[thr,1]
+    a2=thres[thr,2]
+    print(a1)
+    print(a2)
 
-for (tt in c(1:50)){
+for (tt in c(1:20)){
   
   print(tt)
   seeds<-seed.list[tt]
@@ -540,6 +545,7 @@ for (tt in c(1:50)){
   
     }
     
-  write.csv(all_results,file="~/WP2/data/all_result1031.csv",row.names=F)
+  write.csv(all_results,file=paste0("~/WP2/data/all_result_",as.character(a1),as.character(a2),".csv",row.names=F)
   
+  }
 
