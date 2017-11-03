@@ -255,7 +255,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       para_rf2 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper =10 )
+        makeIntegerParam("mtry", lower = 4, upper =8 )
       )
 
       model_build <- function(dataset, n_target,nn) {
@@ -286,24 +286,20 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
-  
-thres<-rbind(c(0.5,1.0),c(1.0,2.0),c(1.0,2.5),c(0.5,1.5),c(0.6,1.2))
     
-for (thr in c(1:5)) {
-    all_results<-data.frame()
-    a1=thres[thr,1]
-    a2=thres[thr,2]
+    a1=1
+    a2=2
     print(a1)
     print(a2)
 
-for (tt in c(1:20)){
+  for (tt in c(1:20)){
   
-  print(tt)
-  seeds<-seed.list[tt]
-  set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
+      print(tt)
+      seeds<-seed.list[tt]
+      set.seed(seeds)
+      trainIndex <- createDataPartition(all_points$DON, p = .9, list = FALSE)
   
-  training <- all_points[trainIndex,]
+      training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
   ## load the point data 
@@ -334,13 +330,13 @@ for (tt in c(1:20)){
   
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
   
-  for (t in c(1,2)){
+      for (t in c(1,2)){
     map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
     map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
     map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
     map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
     
-  }
+       }
   
   M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
@@ -428,7 +424,7 @@ for (tt in c(1:20)){
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-  for(i in c(1:6)){
+      for(i in c(1:6)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -442,7 +438,7 @@ for (tt in c(1:20)){
     WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
     WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
     
-  }
+      }
   
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train,"DON",2)
@@ -514,7 +510,7 @@ for (tt in c(1:20)){
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
    
-  for(i in c(1:6,8:12)){
+      for(i in c(1:6,8:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -527,7 +523,7 @@ for (tt in c(1:20)){
     M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
     M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
     
-   }
+      }
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
@@ -545,7 +541,3 @@ for (tt in c(1:20)){
   
     }
     
-  write.csv(all_results,file=paste0("~/WP2/data/all_result_",as.character(a1),as.character(a2),".csv",row.names=F)
-  
-  }
-
