@@ -218,7 +218,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 
 
 ## load the data 
-# all_results<-data.frame()
 set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
@@ -291,6 +290,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     a2=2
     print(a1)
     print(a2)
+ all_results<-data.frame()
 
   for (tt in c(1:20)){
   
