@@ -545,7 +545,7 @@ for (tt in c(1:20)){
   
     }
     
-  write.csv(all_results,file=paste0("~/WP2/data/all_result_",as.character(a1),as.character(a2),".csv",row.names=F)
+  write.csv(all_results,file=paste0("~/WP2/data/all_result_",as.character(a1),as.character(a2),".csv"),row.names=F)
   
   }
 
