@@ -540,11 +540,4 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   print(all_results)
   
     }
-    
-<<<<<<< HEAD
-  write.csv(all_results,file=paste0("~/WP2/data/all_result_",as.character(a1),as.character(a2),".csv"),row.names=F)
   
-  }
-
-=======
->>>>>>> 96a61b395f4b173e05772dcbf29d2b560e1dec9f
