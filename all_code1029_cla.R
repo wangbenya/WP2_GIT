@@ -254,7 +254,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       para_rf2 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper =8 )
+        makeIntegerParam("mtry", lower = 4, upper =10)
       )
 
       model_build <- function(dataset, n_target,nn) {
@@ -297,7 +297,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .9, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
   
       training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
