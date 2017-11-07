@@ -297,10 +297,10 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
   
       training <- all_points[trainIndex,]
-  testing <- all_points[-trainIndex,]
+      testing <- all_points[-trainIndex,]
   
   ## load the point data 
   training_df <- training[,c(1,2,3,5)] %>% read_pointDataframes(.)
@@ -489,8 +489,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12)]
   
   M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -510,7 +510,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
    
-      for(i in c(1:6,8:13)){
+      for(i in c(1:6,8:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
