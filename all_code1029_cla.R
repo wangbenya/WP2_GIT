@@ -287,7 +287,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       }
     
     a1=1
-    a2=2
+    a2=2.5
     print(a1)
     print(a2)
  all_results<-data.frame()
@@ -414,17 +414,28 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   WP2Train<-reclass(WP2Train,a1,a2)
   WP2Test<-reclass(WP2Test,a1,a2)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
+  WP2Train<-WP2Train[,-c(4,5,10,11)]
+  WP2Test<-WP2Test[,-c(4,5,10,11)]
   
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
+  
+  WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
+  WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
+  WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
+  WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
+  
+  WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
+  WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
+  WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
+  WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
+  
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-      for(i in c(1:6)){
+      for(i in c(1:6,8:11)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -441,7 +452,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       }
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train,"DON",2)
+  rf_DON_m2 <- model_build(WP2Train,"DON",4)
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   
@@ -502,6 +513,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
+  M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
+  
+  M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
   #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
@@ -514,7 +534,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(1:6,8:13)){
+      for(i in c(1:6,8:17)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
