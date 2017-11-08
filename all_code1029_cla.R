@@ -287,7 +287,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       }
     
     a1=1
-    a2=2.5
+    a2=2
     print(a1)
     print(a2)
  all_results<-data.frame()
@@ -435,21 +435,21 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-      for(i in c(1:6,8:11)){
+   #   for(i in c(1:6,8:11)){
 
-    min_train<-min(WP2Train[,i])
-    max_train<-max(WP2Train[,i])
+#    min_train<-min(WP2Train[,i])
+ #   max_train<-max(WP2Train[,i])
     
-    WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
-    WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
+  #  WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
+   # WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
     
-    sd_train<-sd(WP2Train[,i])
-    mean_train<-mean(WP2Train[,i])
+    #sd_train<-sd(WP2Train[,i])
+   # mean_train<-mean(WP2Train[,i])
     
-    WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
-    WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
+   # WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
+   # WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
     
-      }
+    #  }
   
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train,"DON",4)
@@ -534,20 +534,20 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(1:6,8:17)){
-    min_train<-min(M4_train_withKN[,i])
-    max_train<-max(M4_train_withKN[,i])
+      #for(i in c(1:6,8:17)){
+    #min_train<-min(M4_train_withKN[,i])
+    #max_train<-max(M4_train_withKN[,i])
     
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
+    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
+    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
     
-    sd_train<-sd(M4_train_withKN[,i])
-    mean_train<-mean(M4_train_withKN[,i])
+    #sd_train<-sd(M4_train_withKN[,i])
+    #mean_train<-mean(M4_train_withKN[,i])
     
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
     
-      }
+     # }
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
