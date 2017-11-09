@@ -248,13 +248,13 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       para_rf1 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper = 8)
+        makeIntegerParam("mtry", lower = 4, upper = 12)
       )
       
       para_rf2 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper =10)
+        makeIntegerParam("mtry", lower = 4, upper =12)
       )
 
       model_build <- function(dataset, n_target,nn) {
@@ -422,34 +422,34 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
   
-#  WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
- # WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
- # WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
- # WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
+   WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
+   WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
+   WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
+   WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
   
- # WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
- # WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
- # WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
- # WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
+   WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
+   WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
+   WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
+   WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
   
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-   #   for(i in c(1:6,8:11)){
+      for(i in c(1:6,8:11)){
 
-#    min_train<-min(WP2Train[,i])
- #   max_train<-max(WP2Train[,i])
+    min_train<-min(WP2Train[,i])
+    max_train<-max(WP2Train[,i])
     
-  #  WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
-   # WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
+    WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
+    WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
     
-    #sd_train<-sd(WP2Train[,i])
-   # mean_train<-mean(WP2Train[,i])
+    sd_train<-sd(WP2Train[,i])
+    mean_train<-mean(WP2Train[,i])
     
-   # WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
-   # WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
+    WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
+    WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
     
-    #  }
+      }
   
   set.seed(seeds)
   rf_DON_m2 <- model_build(WP2Train,"DON",4)
@@ -513,15 +513,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
- # M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
- # M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
- # M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
- # M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
+  M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
   
- # M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
- # M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
- # M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
- # M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
+  M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
   #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
@@ -534,20 +534,20 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      #for(i in c(1:6,8:17)){
-    #min_train<-min(M4_train_withKN[,i])
-    #max_train<-max(M4_train_withKN[,i])
+      for(i in c(1:6,8:17)){
+    min_train<-min(M4_train_withKN[,i])
+    max_train<-max(M4_train_withKN[,i])
     
-    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
-    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
     
-    #sd_train<-sd(M4_train_withKN[,i])
-    #mean_train<-mean(M4_train_withKN[,i])
+    sd_train<-sd(M4_train_withKN[,i])
+    mean_train<-mean(M4_train_withKN[,i])
     
-    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
-    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
     
-     # }
+      }
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
