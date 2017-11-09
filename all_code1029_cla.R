@@ -266,7 +266,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
           res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf1, control = ctrl,
-                                   show.info = FALSE, measures = acc)
+                                   show.info = FALSE, measures = kappa)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
 
         } else {
@@ -276,7 +276,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
           res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf2, control = ctrl,
-                                   show.info = FALSE, measures = acc)
+                                   show.info = FALSE, measures = kappa)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
         }
         
@@ -422,15 +422,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
   
-  WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
-  WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
-  WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
-  WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
+#  WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
+ # WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
+ # WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
+ # WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
   
-  WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
-  WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
-  WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
-  WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
+ # WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
+ # WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
+ # WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
+ # WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
   
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
@@ -513,15 +513,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
   
-  M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
   #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
