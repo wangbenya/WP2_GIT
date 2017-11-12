@@ -258,7 +258,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.randomForest",predict.type = "prob")
+      class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf = makeLearner("classif.randomForest",predict.type = "prob")
       
       #class_rf$par.vals<-list(importance=T)
@@ -314,7 +314,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     print(a2)
  all_results<-data.frame()
 
-  for (tt in c(1:20)){
+  for (tt in c(1:10)){
   
       print(tt)
       seeds<-seed.list[tt]
@@ -363,6 +363,19 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
 
+  
+  map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
+  
+  for (t in c(1,2)){
+    map1_train[, t][map1_train[, t] <=a1] <- "Low"
+    map1_train[, t][map1_train[, t] < a2] <- "Medium"
+    map1_train[, t][(map1_train[, t] != "Low") & (map1_train[, t] != "Medium")] <- "High"
+    map1_train[, t] <- factor(map1_train[, t], levels = c("Low", "Medium", "High"))
+    
+  }
+  
+  M1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
+  
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
   landscape_test <- raster::extract(landscapes, testing_points,buffer=800)
@@ -485,14 +498,18 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
   rf_DON_m2_low <- model_build(WP2Train_low,"DON",4)
   map2_predict_low <- predict(rf_DON_m2_low, newdata = WP2Test_low)
+  map2_train_low <- predict(rf_DON_m2_low, newdata = WP2Train_low)
   
   rf_DON_m2_medium<- model_build(WP2Train_medium,"DON",4)
   map2_predict_medium <- predict(rf_DON_m2_medium, newdata = WP2Test_medium)
+  map2_train_medium <- predict(rf_DON_m2_medium, newdata = WP2Train_medium)
   
   rf_DON_m2_high <- model_build(WP2Train_high,"DON",4)
   map2_predict_high <- predict(rf_DON_m2_high, newdata = WP2Test_high)
+  map2_train_high <- predict(rf_DON_m2_high, newdata = WP2Train_high)
   
   predict_m2<-data.frame(WP2Test$DON,map2_predict_low$data$prob.Low,map2_predict_medium$data$prob.Medium,map2_predict_high$data$prob.High)
+  train_m2<-data.frame(WP2Train$DON,map2_train_low$data$prob.Low,map2_train_medium$data$prob.Medium,map2_train_high$data$prob.High)
   
   for (r in seq(1,nrow(predict_m2))){
     if (max(predict_m2[r,2:4])==predict_m2[r,2]){
@@ -504,10 +521,22 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     }
   }
   
+  for (r in seq(1,nrow(train_m2))){
+    if (max(train_m2[r,2:4])==train_m2[r,2]){
+      train_m2[r,5]<-"Low"
+    } else if (max(train_m2[r,2:4])==train_m2[r,3]){
+      train_m2[r,5]<-"Medium"
+    } else {
+      train_m2[r,5]<-"High"
+    }
+  }
   
   M2_ACC<-postResample(predict_m2$V5, predict_m2$WP2Test.DON)[1]
   M2_kappa<-postResample(predict_m2$V5, predict_m2$WP2Test.DON)[2]
 
+  M2_ACC_train<-postResample(train_m2$V5, train_m2$WP2Train.DON)[1]
+  M2_kappa_train<-postResample(train_m2$V5, train_m2$WP2Train.DON)[2]
+  
   ## map4, kriging first and then rf
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
@@ -616,15 +645,19 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   rf_DON_m4_low <- model_build(WP4Train_low,"DON",4)
   map4_predict_low <- predict(rf_DON_m4_low, newdata = WP4Test_low)
+  map4_train_low <- predict(rf_DON_m4_low, newdata = WP4Train_low)
   
   rf_DON_m4_medium<- model_build(WP4Train_medium,"DON",4)
   map4_predict_medium <- predict(rf_DON_m4_medium, newdata = WP4Test_medium)
+  map4_train_medium <- predict(rf_DON_m4_medium, newdata = WP4Train_medium)
   
   rf_DON_m4_high <- model_build(WP4Train_high,"DON",4)
   map4_predict_high <- predict(rf_DON_m4_high, newdata = WP4Test_high)
+  map4_train_high <- predict(rf_DON_m4_high, newdata = WP4Train_high)
   
   
   predict_m4<-data.frame(M4_test_withKN$DON,map4_predict_low$data$prob.Low,map4_predict_medium$data$prob.Medium,map4_predict_high$data$prob.High)
+  train_m4<-data.frame(M4_train_withKN$DON,map4_train_low$data$prob.Low,map4_train_medium$data$prob.Medium,map4_train_high$data$prob.High)
   
   for (r in seq(1,nrow(predict_m4))){
     if (max(predict_m4[r,2:4])==predict_m4[r,2]){
@@ -635,13 +668,23 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       predict_m4[r,5]<-"High"
     }
   }
-  
+  for (r in seq(1,nrow(train_m4))){
+    if (max(train_m4[r,2:4])==train_m4[r,2]){
+      train_m4[r,5]<-"Low"
+    } else if (max(train_m4[r,2:4])==train_m4[r,3]){
+      train_m4[r,5]<-"Medium"
+    } else {
+      train_m4[r,5]<-"High"
+    }
+  }
   ## map3 predict accuracy
   #  
   M4_kappa<-postResample(predict_m4$V5,predict_m4$M4_test_withKN.DON)[2]
   M4_ACC<-postResample(predict_m4$V5,predict_m4$M4_test_withKN.DON)[1]
+  M4_kappa_train<-postResample(train_m4$V5,train_m4$M4_train_withKN.DON)[2]
+  M4_ACC_train<-postResample(train_m4$V5,train_m4$M4_train_withKN.DON)[1]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
 
