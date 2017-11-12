@@ -239,14 +239,14 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 10)
+      rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,50)),
         makeIntegerParam("nodesize", lower = 1, upper = 4),
-        makeIntegerParam("mtry", lower = 1, upper =4),
-        makeDiscreteParam("coefReg", values=seq(0.1,1,0.05))
+        makeIntegerParam("mtry", lower = 3, upper =6),
+        makeDiscreteParam("coefReg", values=seq(0.1,0.5,0.05))
       )
 
       model_build <- function(dataset, n_target) {
