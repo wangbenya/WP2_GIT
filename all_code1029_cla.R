@@ -248,13 +248,13 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       para_rf1 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper = 12)
+        makeIntegerParam("mtry", lower = 1, upper = 4)
       )
       
       para_rf2 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
         makeIntegerParam("nodesize", lower = 3, upper = 8),
-        makeIntegerParam("mtry", lower = 4, upper =12)
+        makeIntegerParam("mtry", lower = 1, upper =4)
       )
 
       model_build <- function(dataset, n_target,nn) {
