@@ -237,51 +237,31 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       seed=35
       set.seed(seed)
       class_rf = makeLearner("classif.RRF",predict.type = "prob")
-      #class_rf = makeLearner("classif.randomForest",predict.type = "prob")
-      
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      
       rdesc = makeResampleDesc("CV", iters = 5)
       
-      ## define the parameter spaces for RF
-      para_rf1 = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(200,800,10)),
-        makeIntegerParam("nodesize", lower = 1, upper = 4),
-        makeIntegerParam("mtry", lower = 1, upper = 4)
-      )
-      
-      para_rf2 = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(200,800,10)),
+      ## define the parameter spaces for RF      
+      para_rf = makeParamSet(
+        makeDiscreteParam("ntree", values=seq(200,800,50)),
         makeIntegerParam("nodesize", lower = 1, upper = 4),
         makeIntegerParam("mtry", lower = 1, upper =4)
+        makeNumericParam("coefReg", lower = 0.3, upper = 10),
       )
 
-      model_build <- function(dataset, n_target,nn) {
+      model_build <- function(dataset, n_target) {
         set.seed(35)
-        if (nn == 2) {
           ## define the regression task for DON 
           WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
-          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf1, control = ctrl,
+          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                                    show.info = FALSE, measures = kappa)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
-
-        } else {
-          ## define the regression task for DON 
-          WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
-          ## cross validation
-          ## 10-fold cross-validation
-          rin = makeResampleInstance(rdesc, task = WP3_target)
-          res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf2, control = ctrl,
-                                   show.info = FALSE, measures = kappa)
-          lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
-        }
         
         ## train the final model 
-        set.seed(719)
+        set.seed(35)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
@@ -464,7 +444,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       }
   
   set.seed(seeds)
-  rf_DON_m2 <- model_build(WP2Train,"DON",4)
+  rf_DON_m2 <- model_build(WP2Train,"DON")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
   map2_train <- predict(rf_DON_m2, newdata = WP2Train)
@@ -565,7 +545,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       }
   
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
+  rf_DON_m4<-model_build(M4_train_withKN,"DON")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
@@ -579,8 +559,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
-
-  print(all_results)
   
+  print(all_results)
+  print(rf_DON_m4$learner)
     }
   
