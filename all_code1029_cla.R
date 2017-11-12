@@ -239,7 +239,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 3)
+      rdesc = makeResampleDesc("CV", iters = 10)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
