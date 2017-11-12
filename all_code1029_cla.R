@@ -218,7 +218,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","SS","GS", "Catchment", "GW_dept
 
 
 ## load the data 
-set.seed(719)
+set.seed(666)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
@@ -297,7 +297,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
   
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]

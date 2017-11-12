@@ -440,20 +440,20 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
-  WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
-  WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
-  WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
+  #WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
+  #WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
+ # WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
+ # WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
   
-  WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
-  WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
-  WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
-  WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
+ # WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
+ # WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
+ # WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
+ # WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
   
   #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
   #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
   
-  for(i in c(1:6,8:11)){
+  for(i in c(1:6)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -478,6 +478,9 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   WP2Train_high<-reclass_high(WP2Train,a2)
   WP2Test_high<-reclass_high(WP2Test,a2)
   
+  WP2Train<-reclass(WP2Train,a1,a2)
+  WP2Test<-reclass(WP2Test,a1,a2)
+  
   set.seed(seeds)
 
   rf_DON_m2_low <- model_build(WP2Train_low,"DON",4)
@@ -489,10 +492,21 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   rf_DON_m2_high <- model_build(WP2Train_high,"DON",4)
   map2_predict_high <- predict(rf_DON_m2_high, newdata = WP2Test_high)
   
-
+  predict_m2<-data.frame(WP2Test$DON,map2_predict_low$data$prob.Low,map2_predict_medium$data$prob.Medium,map2_predict_high$data$prob.High)
   
-  M2_ACC<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
-  M2_kappa<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
+  for (r in seq(1,nrow(predict_m2))){
+    if (max(predict_m2[r,2:4])==predict_m2[r,2]){
+      predict_m2[r,5]<-"Low"
+    } else if (max(predict_m2[r,2:4])==predict_m2[r,3]){
+      predict_m2[r,5]<-"Medium"
+    } else {
+      predict_m2[r,5]<-"High"
+    }
+  }
+  
+  
+  M2_ACC<-postResample(predict_m2$V5, predict_m2$WP2Test.DON)[1]
+  M2_kappa<-postResample(predict_m2$V5, predict_m2$WP2Test.DON)[2]
 
   ## map4, kriging first and then rf
   # kriging for DOC
@@ -523,14 +537,13 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  
   ## create the training and testing sets 
   ## build the model for map2
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
-  M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
+  #2M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
+  #M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
@@ -548,15 +561,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
   M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
-  M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
+  #M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
+ # M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
   
-  M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
-  M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
+#  M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
+#M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
+ # M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
   #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
   #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
   
@@ -569,29 +582,65 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      #for(i in c(1:6,8:17)){
-    #min_train<-min(M4_train_withKN[,i])
-    #max_train<-max(M4_train_withKN[,i])
+      for(i in c(1:6,8:13)){
+    min_train<-min(M4_train_withKN[,i])
+    max_train<-max(M4_train_withKN[,i])
     
-    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
-    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
     
-    #sd_train<-sd(M4_train_withKN[,i])
-    #mean_train<-mean(M4_train_withKN[,i])
+    sd_train<-sd(M4_train_withKN[,i])
+    mean_train<-mean(M4_train_withKN[,i])
     
-    #M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
-    #M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
+    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
+    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
     
-     # }
+      }
+  
+  WP4Train_low<-reclass_low(M4_train_withKN,a1)
+  WP4Test_low<-reclass_low(M4_test_withKN,a1)
+  
+  WP4Train_medium<-reclass_medium(M4_train_withKN,a1,a2)
+  WP4Test_medium<-reclass_medium(M4_test_withKN,a1,a2)
+  
+  WP4Train_high<-reclass_high(M4_train_withKN,a2)
+  WP4Test_high<-reclass_high(M4_test_withKN,a2)
+  
+  WP4Train<-reclass(M4_train_withKN,a1,a2)
+  WP4Test<-reclass(M4_test_withKN,a1,a2)
+  
+  M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
+  M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
   
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON",4)
+  
+  rf_DON_m4_low <- model_build(WP4Train_low,"DON",4)
+  map4_predict_low <- predict(rf_DON_m4_low, newdata = WP4Test_low)
+  
+  rf_DON_m4_medium<- model_build(WP4Train_medium,"DON",4)
+  map4_predict_medium <- predict(rf_DON_m4_medium, newdata = WP4Test_medium)
+  
+  rf_DON_m4_high <- model_build(WP4Train_high,"DON",4)
+  map4_predict_high <- predict(rf_DON_m4_high, newdata = WP4Test_high)
+  
+  
+  predict_m4<-data.frame(M4_test_withKN$DON,map4_predict_low$data$prob.Low,map4_predict_medium$data$prob.Medium,map4_predict_high$data$prob.High)
+  
+  for (r in seq(1,nrow(predict_m4))){
+    if (max(predict_m4[r,2:4])==predict_m4[r,2]){
+      predict_m4[r,5]<-"Low"
+    } else if (max(predict_m4[r,2:4])==predict_m4[r,3]){
+      predict_m4[r,5]<-"Medium"
+    } else {
+      predict_m4[r,5]<-"High"
+    }
+  }
   
   ## map3 predict accuracy
-  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   #  
-  M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
-  M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
+  M4_kappa<-postResample(predict_m4$V5,predict_m4$M4_test_withKN.DON)[2]
+  M4_ACC<-postResample(predict_m4$V5,predict_m4$M4_test_withKN.DON)[1]
+  
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
