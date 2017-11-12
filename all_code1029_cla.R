@@ -244,8 +244,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,50)),
-        makeIntegerParam("nodesize", lower = 1, upper = 4),
-        makeIntegerParam("mtry", lower = 3, upper =6),
+        makeIntegerParam("nodesize", lower = 4, upper = 8),
+        makeIntegerParam("mtry", lower = 4, upper =8),
         makeDiscreteParam("coefReg", values=seq(0.1,0.5,0.05))
       )
 
