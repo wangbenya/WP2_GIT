@@ -253,7 +253,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       
       para_rf2 = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,800,10)),
-        makeIntegerParam("nodesize", lower = 3, upper = 8),
+        makeIntegerParam("nodesize", lower = 1, upper = 4),
         makeIntegerParam("mtry", lower = 1, upper =4)
       )
 
