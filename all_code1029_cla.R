@@ -239,7 +239,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 5)
+      rdesc = makeResampleDesc("CV", iters = 3)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
@@ -277,7 +277,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
   
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]
