@@ -561,6 +561,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
+  print(rf_DON_m2$learner)
   print(rf_DON_m4$learner)
+ 
     }
   
