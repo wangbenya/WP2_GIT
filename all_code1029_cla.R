@@ -236,15 +236,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.RRF",predict.type = "prob")
+      class_rf = makeLearner("classif.RRF")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(300,1000,50)),
-        makeIntegerParam("nodesize", lower = 6, upper = 10),
+        makeDiscreteParam("ntree", values=seq(300,500,20)),
+        makeIntegerParam("nodesize", lower = 4, upper = 10),
         makeIntegerParam("mtry", lower = 4, upper =8),
         makeDiscreteParam("coefReg", values=seq(0.05,0.5,0.05))
       )
