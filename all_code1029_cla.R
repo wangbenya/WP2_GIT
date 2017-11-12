@@ -236,7 +236,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.randomForest",predict.type = "prob")
+      class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf = makeLearner("classif.randomForest",predict.type = "prob")
       
       #class_rf$par.vals<-list(importance=T)
@@ -340,6 +340,18 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
+  
+  map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
+  
+      for (t in c(1,2)){
+    map1_train[, t][map1_train[, t] <=a1] <- "Low"
+    map1_train[, t][map1_train[, t] < a2] <- "Medium"
+    map1_train[, t][(map1_train[, t] != "Low") & (map1_train[, t] != "Medium")] <- "High"
+    map1_train[, t] <- factor(map1_train[, t], levels = c("Low", "Medium", "High"))
+    
+       }
+
+    M1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
 
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
@@ -455,9 +467,12 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   rf_DON_m2 <- model_build(WP2Train,"DON",4)
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
-  
+  map2_train <- predict(rf_DON_m2, newdata = WP2Train)
+
   M2_ACC<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
   M2_kappa<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
+  
+  M2_ACC_train<-postResample(map2_train$data$response, map2_train$data$truth)[1]
 
   ## map4, kriging first and then rf
   # kriging for DOC
@@ -554,10 +569,14 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
+  map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
+
   #  
   M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
+
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
 
