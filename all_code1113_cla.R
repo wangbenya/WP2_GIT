@@ -257,7 +257,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     print(a2)
  all_results<-data.frame()
 
-for (tt in c(1:20)){
+for (tt in c(1:5)){
   
       print(tt)
       seeds<-seed.list[tt]
@@ -359,14 +359,14 @@ for (tt in c(1:20)){
   WP2Train<-reclass(M2_train,a1,a2)
   WP2Test<-reclass(M2_test,a1,a2)
   
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
+  WP2Train<-WP2Train[,-c(4,5)]
+  WP2Test<-WP2Test[,-c(4,5)]
   
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-      for(i in c(1:6)){
+      for(i in c(5,6,8,9)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -415,8 +415,8 @@ for (tt in c(1:20)){
   names(kriging_nutrietn) <- c("DON_k","DOC_k")
   
   ## extract the data from landscapes_withN
-  landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
-  landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
+  landscape_train_withKN <- raster::extract(kriging_nutrietn, training_points)
+  landscape_test_withKN <- raster::extract(kriging_nutrietn, testing_points)
   
   M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
   M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
@@ -434,18 +434,18 @@ for (tt in c(1:20)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,12)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,12)]
   
-  M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
-  M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
-  M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
-  M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
+  #M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
+  #M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
+ # M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
+#  M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
   
-  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
-  M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
-  M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
-  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
+#  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
+ # M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
+ # M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
+#  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
@@ -455,7 +455,7 @@ for (tt in c(1:20)){
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(1:6,8:13)){
+      for(i in c(5,6,8:11)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
