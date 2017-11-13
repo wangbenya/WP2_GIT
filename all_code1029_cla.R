@@ -322,8 +322,8 @@ for (tt in c(1:20)){
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
   landscape_test <- raster::extract(landscapes, testing_points,buffer=800)
   
-  landscape_train<-get_landscape(landscape_train)
-  landscape_test<-get_landscape(landscape_test)
+  #landscape_train<-get_landscape(landscape_train)
+  #landscape_test<-get_landscape(landscape_test)
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Longitude","Latitude")])
   M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Longitude","Latitude")])
