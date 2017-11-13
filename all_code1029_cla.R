@@ -568,6 +568,5 @@ for (tt in c(1:20)){
  
     }
   
- confusionMatrix(map4_predict$data$response,map4_predict$data$truth)
  
  
