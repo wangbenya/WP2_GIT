@@ -236,7 +236,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      class_rf = makeLearner("classif.RRF")
+      class_rf = makeLearner("classif.RRF",predict.type = "prob")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       rdesc = makeResampleDesc("CV", iters = 5)
@@ -566,3 +566,6 @@ for (tt in c(1:20)){
  
     }
   
+ confusionMatrix(map4_predict$data$response,map4_predict$data$truth)
+ 
+ 
