@@ -322,30 +322,13 @@ for (tt in c(1:20)){
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
   landscape_test <- raster::extract(landscapes, testing_points,buffer=800)
   
-  get_landscape<-function(df){
-  landscape_all<-data.frame()
-  for (ii in seq(1,length(df))){
-  aa<-as.data.frame(df[[ii]])
-  
-  Soil=tail(names(sort(table(aa[,1]))),1)
-  Veg=tail(names(sort(table(aa[,2]))),1)
-  Landuse=tail(names(sort(table(aa[,3]))),1)
-  SS=tail(names(sort(table(aa[,4]))),1)
-  GS=tail(names(sort(table(aa[,5]))),1)
-  Catchment=tail(names(sort(table(aa[,6]))),1)
-  GW_depth=mean(aa[,7])
-  Distance=mean(aa[,8])
-  
-  sing_land<-data.frame(Soil,Veg,Landuse,SS,GS,Catchment,GW_depth,Distance)
-  landscape_all<-rbind(landscape_all,sing_land)
-  }
-  }
+  landscape_train<-get_landscape(landscape_train)
+  landscape_test<-get_landscape(landscape_test)
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Longitude","Latitude")])
   M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Longitude","Latitude")])
   
   names(M2_train) <- colnames(M2_test)
-  
   
   common_landscape<-function(land){
     land_dataset<-data.frame(table(M2_train[,land]))
