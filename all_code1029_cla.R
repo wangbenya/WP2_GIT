@@ -138,21 +138,6 @@ get_landscape<-function(df){
   return(landscape_all)
 }
 
-transCat<-function(i){
-  var_name<-names(M2_train)[i]
-  a<-as.list(unique(M2_train[,var_name]))
-  b<- data.frame()
-  
-  for (x in seq(1, length(a))) {
-    value = a[[x]]
-    data1 <- subset(M2_train, M2_train[,var_name] == value)
-    c <- data.frame(value, mean(data1$DON), length(data1$DON))
-    b <- rbind(b,c)
-  }
-  
-  colnames(b) <- c(var_name, paste0("mean_DON_",var_name),"NO.")
-  return(b)
-}
 
 ## preprocess the landscape raster
 Soil <- pre(Soil)
@@ -345,6 +330,23 @@ for (tt in c(1:20)){
   
   names(M2_train) <- colnames(M2_test)
   
+  transCat<-function(i){
+  var_name<-names(M2_train)[i]
+  a<-as.list(unique(M2_train[,var_name]))
+  b<- data.frame()
+  
+  for (x in seq(1, length(a))) {
+    value = a[[x]]
+    data1 <- subset(M2_train, M2_train[,var_name] == value)
+    c <- data.frame(value, mean(data1$DON), length(data1$DON))
+    b <- rbind(b,c)
+  }
+  
+  colnames(b) <- c(var_name, paste0("mean_DON_",var_name),"NO.")
+  return(b)
+ }
+
+
   b1<-transCat(1)
   b2<-transCat(2)
   b3<-transCat(3)
