@@ -235,7 +235,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       )
 
       model_build <- function(dataset, n_target) {
-        set.seed(35)
+        set.seed(719)
           ## define the regression task for DON 
           WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
@@ -246,7 +246,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
         
         ## train the final model 
-        set.seed(35)
+        set.seed(719)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
@@ -257,7 +257,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     print(a2)
  all_results<-data.frame()
 
-for (tt in c(1:5)){
+for (tt in c(13,14,19)){
   
       print(tt)
       seeds<-seed.list[tt]
@@ -428,6 +428,16 @@ for (tt in c(1:5)){
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
+  DON_DOC<-data.frame(M4_train_withKN$DON,M4_train_withKN$DOC_k)
+  names(DON_DOC)<-c("DON","DOC_k")
+  lm_DON<-lm(DON~DOC_k,data=DON_DOC)
+  DON_lm_train<-fitted(lm_DON)
+  DON_test<-data.frame(M4_test_withKN$DOC_k)
+  names(DON_test)<-c("DOC_k")
+  DON_test<-predict(lm_DON,newdata=DON_test)
+  
+  M4_train_withKN$DON_lm<-fitted(lm_DON)
+  M4_test_withKN$DON_lm<-DON_test
   M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
   M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
   
@@ -455,7 +465,7 @@ for (tt in c(1:5)){
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(5,6,8:11)){
+      for(i in c(5,6,8:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
