@@ -13,11 +13,7 @@ library(SemiPar)
 library(Hmisc)
 library(foreign)
 library(maptools)
-library(prettymapr)
-library(mlrMBO)
-library(parallelMap)
 library(caret)
-library(automap)
 library(reshape2)
 
 ## start the parallel 
@@ -57,8 +53,8 @@ read_points <- function(read_data) {
   if (length(zerodist(SP)) >= 1) {
     SP <- SP[-(zerodist(SP)[, 1]),]
   }
-  #   plot(study_area_withW)
-  #  points(SP@coords)
+    plot(study_area_withW)
+    points(SP@coords)
   return(SP)
 }
 
@@ -70,8 +66,8 @@ read_pointDataframes <- function(read_data) {
   if (length(zerodist(SPD)) >= 1) {
     SPD <- SPD[-(zerodist(SPD)[, 1]),]
   }
-  # plot(study_area_withW)
-  #points(SPD@coords)
+   plot(study_area_withW)
+   points(SPD@coords)
   return(SPD)
 }
 
@@ -238,7 +234,7 @@ all_results<-data.frame()
 set.seed(719)
 seed.list<-sample(1:1000,50,replace =F)
 
-all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
+all_points<-read.csv("/Users/Benya_wang/Documents/WP2/all_data1210.csv",header = T)
 #all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
 #all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
@@ -254,7 +250,7 @@ for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE,)
   
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
