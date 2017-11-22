@@ -235,7 +235,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       )
 
       model_build <- function(dataset, n_target) {
-        set.seed(35)
+        set.seed(719)
           ## define the regression task for DON 
           WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
@@ -246,7 +246,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
         
         ## train the final model 
-        set.seed(35)
+        set.seed(719)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
@@ -257,7 +257,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     print(a2)
  all_results<-data.frame()
 
-for (tt in c(1:20)){
+for (tt in c(13,14,19)){
   
       print(tt)
       seeds<-seed.list[tt]
@@ -330,106 +330,43 @@ for (tt in c(1:20)){
   
   names(M2_train) <- colnames(M2_test)
   
-  transCat<-function(i){
-  var_name<-names(M2_train)[i]
-  a<-as.list(unique(M2_train[,var_name]))
-  b<- data.frame()
+  common_landscape<-function(land){
+    land_dataset<-data.frame(table(M2_train[,land]))
+    land_common<-subset(land_dataset,land_dataset[,2]==max(land_dataset[,2]))[1]
+    return(as.matrix(land_common))
+  }
+    
+  soil_max = common_landscape("Soil")[1]
+  veg_max=common_landscape("Veg")[1]
+  landuse_max = common_landscape("Landuse")[1]
+  ss_max = common_landscape("SS")[1]
+  GS_max = common_landscape("GS")[1]
+  cat_max = common_landscape("Catchment")[1]
   
-  for (x in seq(1, length(a))) {
-    value = a[[x]]
-    data1 <- subset(M2_train, M2_train[,var_name] == value)
-    c <- data.frame(value, mean(data1$DON), length(data1$DON))
-    b <- rbind(b,c)
+  max_list<-list(soil_max,veg_max,landuse_max,ss_max,GS_max,cat_max)
+
+  for (ii in seq(1,6)){
+      M2_train[,ii]<-as.factor(M2_train[,ii])
+      M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
+      M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
   }
   
-  colnames(b) <- c(var_name, paste0("mean_DON_",var_name),"NO.")
-  return(b)
- }
-
-
-  b1<-transCat(1)
-  b2<-transCat(2)
-  b3<-transCat(3)
-  b4<-transCat(4)
-  b5<-transCat(5)
-  b6<-transCat(6)
-  
-  soil_max = b1[which(b1$NO. == max(b1$NO.)),][, 2]
-  veg_max = b2[which(b2$NO. == max(b2$NO.)),][, 2]
-  landuse_max = b3[which(b3$NO. == max(b3$NO.)),][, 2]
-  ss_max = b4[which(b4$NO. == max(b4$NO.)),][, 2]
-  GS_max = b5[which(b5$NO. == max(b5$NO.)),][, 2]
-  cat_max = b6[which(b6$NO. == max(b6$NO.)),][, 2]
-  
-  base1 <- (merge(b1, M2_train, by = 'Soil', all.y = T))
-  base2 <- (merge(b2, base1, by = 'Veg', all.y = T))
-  base2 <- base2[, - c(3, 6)]
-  
-  test1 <- (merge(b1, M2_test, by = 'Soil', all.y = T))
-  test1[is.na(test1)] <- soil_max
-  test1 <- test1[, - c(3)]
-  
-  test2 <- (merge(b2, test1, by = 'Veg', all.y = T))
-  test2[is.na(test2)] <- veg_max
-  test2 <- test2[, - c(3)]
-  
-  base3 <- (merge(b3, base2, by = 'Landuse', all.y = T))
-  base4 <- (merge(b4, base3, by = 'SS', all.y = T))
-  base4 <- base4[, - c(3, 6)]
-  
-  test3 <- (merge(b3, test2, by = 'Landuse', all.y = T))
-  test3[is.na(test3)] <- landuse_max
-  test3 <- test3[, - c(3)]
-  
-  test4 <- (merge(b4, test3, by = 'SS', all.y = T))
-  test4[is.na(test4)] <- ss_max
-  test4 <- test4[, - c(3)]
-  
-  base5 <- (merge(b5, base4, by = 'GS', all.y = T))
-  base6 <- (merge(b6, base5, by = 'Catchment', all.y = T))
-  base6 <- base6[, - c(3, 6)]
-  
-  test5 <- (merge(b5, test4, by = 'GS', all.y = T))
-  test5[is.na(test5)] <- GS_max
-  test5 <- test5[, - c(3)]
-  
-  test6 <- (merge(b6, test5, by = 'Catchment', all.y = T))
-  test6[is.na(test6)] <- cat_max
-  test6 <- test6[, - c(3)]
-  
-  ## create the training and testing sets 
-  WP2Train <- base6[, c(12,10,8, 6, 4,2, 13:17)]
-  WP2Test <- test6[, c(12,10,8, 6, 4,2, 13:17)]
-  
   ## build the model for map2
-  names(WP2Train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(WP2Test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_train)<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  names(M2_test)<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
-  WP2Train<-reclass(WP2Train,a1,a2)
-  WP2Test<-reclass(WP2Test,a1,a2)
+
+  WP2Train<-reclass(M2_train,a1,a2)
+  WP2Test<-reclass(M2_test,a1,a2)
   
-  WP2Train<-WP2Train[,-c(4,5,10,11)]
-  WP2Test<-WP2Test[,-c(4,5,10,11)]
+  WP2Train<-WP2Train[,-c(4,5)]
+  WP2Test<-WP2Test[,-c(4,5)]
   
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  
-  # WP2Train$dep_soil<-WP2Train$Soil*WP2Train$GW_depth
-  # WP2Train$dep_veg<-WP2Train$Veg*WP2Train$GW_depth
-  # WP2Train$dep_land<-WP2Train$Landuse*WP2Train$GW_depth
-  # WP2Train$dep_cat<-WP2Train$Catchment*WP2Train$GW_depth
-  
-   #WP2Test$dep_soil<-WP2Test$Soil*WP2Test$GW_depth
-   #WP2Test$dep_veg<-WP2Test$Veg*WP2Test$GW_depth
-   #WP2Test$dep_land<-WP2Test$Landuse*WP2Test$GW_depth
-   #WP2Test$dep_cat<-WP2Test$Catchment*WP2Test$GW_depth
-  
-  #WP2Train$log_lat<-WP2Train$Longitude/WP2Train$Latitude
-  #WP2Test$log_lat<-WP2Test$Longitude/WP2Test$Latitude
-  
-      for(i in c(1:6)){
+      for(i in c(5,6,8,9)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -478,12 +415,12 @@ for (tt in c(1:20)){
   names(kriging_nutrietn) <- c("DON_k","DOC_k")
   
   ## extract the data from landscapes_withN
-  landscape_train_withKN <- raster::extract(kriging_nutrietn, read_points(base6[,15:17]))
-  landscape_test_withKN <- raster::extract(kriging_nutrietn, read_points(test6[,15:17]))
+  landscape_train_withKN <- raster::extract(kriging_nutrietn, training_points)
+  landscape_test_withKN <- raster::extract(kriging_nutrietn, testing_points)
   
-  M4_train_withKN <- cbind(base6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(test6[, c(12,10,8, 6, 4,2, 13:17)],as.data.frame(landscape_test_withKN))  
-  names(M4_test_withKN) <- names(M4_train_withKN)
+  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
+   names(M4_test_withKN) <- names(M4_train_withKN)
   
   
   ## create the training and testing sets 
@@ -491,38 +428,35 @@ for (tt in c(1:20)){
   names(M4_train_withKN)[1:11]<-c("Soil", "Veg", "Landuse","SS","GS","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   names(M4_test_withKN)[1:11]<-c("Soil",  "Veg", "Landuse","SS","GS", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
+  DON_DOC<-data.frame(M4_train_withKN$DON,M4_train_withKN$DOC_k)
+  names(DON_DOC)<-c("DON","DOC_k")
+  lm_DON<-lm(DON~DOC_k,data=DON_DOC)
+  DON_lm_train<-fitted(lm_DON)
+  DON_test<-data.frame(M4_test_withKN$DOC_k)
+  names(DON_test)<-c("DOC_k")
+  DON_test<-predict(lm_DON,newdata=DON_test)
+  
+  M4_train_withKN$DON_lm<-fitted(lm_DON)
+  M4_test_withKN$DON_lm<-DON_test
   M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
   M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,12)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,12)]
   
-  M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
-  M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
-  M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
-  M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
+  #M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
+  #M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
+ # M4_train_withKN$DOC_LAND<-M4_train_withKN$DOC_k*M4_train_withKN$Landuse
+#  M4_train_withKN$DOC_CAT<-M4_train_withKN$Catchment*M4_train_withKN$DOC_k
   
-  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
-  M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
-  M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
-  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
+#  M4_test_withKN$DOC_SOIL<-M4_test_withKN$DOC_k*M4_test_withKN$Soil
+ # M4_test_withKN$DOC_VEG<-M4_test_withKN$DOC_k*M4_test_withKN$Veg
+ # M4_test_withKN$DOC_LAND<-M4_test_withKN$DOC_k*M4_test_withKN$Landuse
+#  M4_test_withKN$DOC_CAT<-M4_test_withKN$Catchment*M4_test_withKN$DOC_k
   
-  #M4_train_withKN$dep_soil<-M4_train_withKN$Soil*M4_train_withKN$GW_depth
-  #M4_train_withKN$dep_veg<-M4_train_withKN$Veg*M4_train_withKN$GW_depth
-  #M4_train_withKN$dep_land<-M4_train_withKN$Landuse*M4_train_withKN$GW_depth
-  #M4_train_withKN$dep_cat<-M4_train_withKN$Catchment*M4_train_withKN$GW_depth
-  
-  #M4_test_withKN$dep_soil<-M4_test_withKN$Soil*M4_test_withKN$GW_depth
-  #M4_test_withKN$dep_veg<-M4_test_withKN$Veg*M4_test_withKN$GW_depth
-  #M4_test_withKN$dep_land<-M4_test_withKN$Landuse*M4_test_withKN$GW_depth
-  #M4_test_withKN$dep_cat<-M4_test_withKN$Catchment*M4_test_withKN$GW_depth
-  #M4_train_withKN$log_lat<-M4_train_withKN$Longitude/M4_train_withKN$Latitude
-  #M4_test_withKN$log_lat<-M4_test_withKN$Longitude/M4_test_withKN$Latitude
-  
- # M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -531,7 +465,7 @@ for (tt in c(1:20)){
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(1:6,8:13)){
+      for(i in c(5,6,8:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     

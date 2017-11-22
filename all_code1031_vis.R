@@ -335,8 +335,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"),
                       name = "DON mg/L",
                       breaks = c("Low", "Medium", "High"),
-                      labels = c("Low", "Medium", "High")) 
-  
+                      labels = c("Low", "Medium", "High"))
+    
   
   ## M2, using RF to predict the DON
   landscape_train <- raster::extract(landscapes, training_points,buffer=800)
@@ -447,7 +447,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"),
                       name = "DON mg/L",
                       breaks = c("Low", "Medium", "High"),
-                      labels = c("Low", "Medium", "High")) 
+                      labels = c("Low", "Medium", "High"))
+  
   
   ## map4, kriging first and then rf
   # kriging for DOC
@@ -571,18 +572,22 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
   ggplot(data = map4_df, aes(y = map4_df$Latitude, x = map4_df$Longitude)) +
     geom_raster(aes(fill = map_un_df$var1.pred)) + theme_bw() +
     coord_equal() +
-    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())
+    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+    #geom_point(data=data.frame(training_df),aes(x=training_df$s1,y=training_df$s2),
+     #          shape=5,size=1.5,col="red")+
+    geom_point(data=data.frame(depth),aes(x=depth$s1,y=depth$s2),
+               shape=3,size=2,col="red")
  
   # map4_predict$data$response=map4_predict$data$response*(max_train_DON-min_train_DON)+min_train_DON
-  high_area2<-high_area
+  high_area2<-map4_df
   high_area2$uncertianty <-map_un_df$var1.pred
   high_area2$risk <-map_un_df$var1.pred
   high_area2$needSamp <-map_un_df$var1.pred
 
-  high_area2[, "risk"][(high_area2[, "DON"] ==3)&(high_area2[,"uncertianty"]<=0.3)] <- "High_risk"
+  high_area2[, "risk"][(high_area2[, "DON"] !=1)&(high_area2[,"uncertianty"]<=0.3)] <- "High_risk"
   high_area2[, "risk"][high_area2[, "risk"] !="High_risk"] <- "No_risk"
   
-  high_area2[, "needSamp"][(high_area2[, "DON"] !=1)&(high_area2[,"uncertianty"]>=0.5)] <- "More_data"
+  high_area2[, "needSamp"][(high_area2[, "DON"] !=1)&(high_area2[,"uncertianty"]>=0.55)] <- "More_data"
   high_area2[, "needSamp"][high_area2[, "needSamp"] !="More_data"] <- "No_need"
   
   ## get high DON area with low uncertatiy 
@@ -590,10 +595,12 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     geom_raster(aes(fill = as.factor(high_area2$risk))) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_manual(values = c("#56B4E9","#999999"),
+    scale_fill_manual(values = c("#56B4E9","#D0D3D4"),
                       name = "DON mg/L",
                       breaks = c("Low", "Medium", "High"),
-                      labels = c("Low", "Medium", "High")) 
+                      labels = c("Low", "Medium", "High")) +
+  geom_point(data=data.frame(depth),aes(x=depth$s1,y=depth$s2),
+             shape=3,size=3,col="red")
   
   ## get median and high DON areaa with high uncertainty 
 
@@ -601,10 +608,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
     geom_raster(aes(fill = as.factor(high_area2$needSamp))) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_manual(values = c("#56B4E9","#999999"),
+    scale_fill_manual(values = c("#56B4E9","#D0D3D4"),
                       name = "DON mg/L",
                       breaks = c("Low", "Medium", "High"),
-                      labels = c("Low", "Medium", "High")) 
+                      labels = c("Low", "Medium", "High"))+
+    geom_point(data=data.frame(training_df),aes(x=training_df$s1,y=training_df$s2),
+               shape=5,size=1)+
+    geom_point(data=data.frame(depth),aes(x=depth$s1,y=depth$s2),
+               shape=3,size=3,col="red")
+  
   
   
 
