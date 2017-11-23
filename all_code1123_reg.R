@@ -208,7 +208,8 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
- for (tt in seq(1,5)){
+# for (tt in seq(1,5)){
+      tt=1
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
@@ -254,16 +255,17 @@ all_results<-data.frame()
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
     
   ## M2, using RF to predict the DON
-  v=250
-  h=850
+  all_ab<-data.frame()
+  for (a in seq(50,1000,100)){
+   for (b in seq(50,1000,100)){
   capture_zone_land<-function(df){
   num<-nrow(df)
   landscape_data<-data.frame()
   for (r in seq(1,num)){
   p1_long<-df@coords[r,1]
   p1_lat<-df@coords[r,2]
-  pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+h,p1_lat+v),c(p1_long+2*h,p1_lat+v),
-                       c(p1_long+2*h,p1_lat-v),c(p1_long+v,p1_lat-v),c(p1_long,p1_lat)))  
+  pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long,p1_lat+a),c(p1_long+sqrt(2)/2*b,p1_lat+a+sqrt(2)/2*b),
+                       c(p1_long+a+sqrt(2)/2*b,p1_lat+sqrt(2)/2*b),c(p1_long+a,p1_lat),c(p1_long,p1_lat)))  
   projection(pg)<- WGS84
   p1_landscape<-raster::extract(landscapes,pg)
   p1_landscape<-get_landscape(p1_landscape)
@@ -373,8 +375,8 @@ all_results<-data.frame()
     for (r in seq(1,num)){
       p1_long<-df@coords[r,1]
       p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+h,p1_lat+v),c(p1_long+2*h,p1_lat+v),
-                           c(p1_long+2*h,p1_lat-v),c(p1_long+v,p1_lat-v),c(p1_long,p1_lat)))  
+      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long,p1_lat+a),c(p1_long+sqrt(2)/2*b,p1_lat+a+sqrt(2)/2*b),
+                       c(p1_long+a+sqrt(2)/2*b,p1_lat+sqrt(2)/2*b),c(p1_long+a,p1_lat),c(p1_long,p1_lat)))  
       projection(pg)<- WGS84
       p1_landscape<-raster::extract(kriging_nutrietn,pg)
       land_data<-data.frame(DON_k=mean(p1_landscape[[1]][,1]),DOC_k=mean(p1_landscape[[1]][,2]))
@@ -441,13 +443,15 @@ all_results<-data.frame()
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  
+  sing_ab<-data.frame(a,b,M2_r2,M2_r2_train,M4_r2,M4_r2_train)
+  all_ab<-rbind(all_ab,sing_ab)
+  }}
   sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
   
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
  
- }
+ #}
  
  
