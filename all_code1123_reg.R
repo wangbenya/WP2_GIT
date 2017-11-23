@@ -176,18 +176,21 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      reg_rf = makeLearner("regr.RRF")
+      reg_xgboost = makeLearner("regr.xgboost")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
       rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
-      para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(300,500,20)),
-        makeIntegerParam("nodesize", lower = 4, upper = 10),
-        makeIntegerParam("mtry", lower = 4, upper =15),
-        makeDiscreteParam("coefReg", values=seq(0.2,0.5,0.05))
-      )
+      xg_ps <- makeParamSet(
+makeIntegerParam("nrounds",lower=200,upper=600),
+makeIntegerParam("max_depth",lower=3,upper=20),
+makeNumericParam("lambda",lower=0.55,upper=0.60),
+makeNumericParam("eta", lower = 0.001, upper = 0.5),
+makeNumericParam("subsample", lower = 0.10, upper = 0.80),
+makeNumericParam("min_child_weight",lower=1,upper=5),
+makeNumericParam("colsample_bytree",lower = 0.2,upper = 0.8)
+)
 
       model_build <- function(dataset, n_target) {
         set.seed(719)
@@ -196,15 +199,15 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           ## cross validation
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
-          res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+          res_rf = mlr::tuneParams(reg_xgboost, WP3_target, resampling = rdesc, par.set = xg_ps, control = ctrl,
                                    show.info = FALSE,measures=rsq)
-          lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
+          lrn_rf = setHyperPars(reg_xgboost, par.vals = reg_xgboost$x)
         
         ## train the final model 
         set.seed(719)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
-      }
+        }
 
 all_results<-data.frame()
 
