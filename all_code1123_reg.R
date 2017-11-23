@@ -179,11 +179,11 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       reg_rf = makeLearner("regr.RRF")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 5)
+      rdesc = makeResampleDesc("CV", iters = 3)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(300,500,20)),
+        makeDiscreteParam("ntree", values=seq(300,800,50)),
         makeIntegerParam("nodesize", lower = 4, upper = 10),
         makeIntegerParam("mtry", lower = 4, upper =12),
         makeDiscreteParam("coefReg", values=seq(0.2,0.4,0.05))
