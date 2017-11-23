@@ -197,7 +197,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           ## 10-fold cross-validation
           rin = makeResampleInstance(rdesc, task = WP3_target)
           res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                                   show.info = FALSE,measures=adjrsq)
+                                   show.info = FALSE,measures=rsq)
           lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
         
         ## train the final model 
