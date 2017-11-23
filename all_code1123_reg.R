@@ -179,7 +179,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       reg_rf = makeLearner("regr.RRF")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 10)
+      rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
@@ -235,7 +235,7 @@ all_results<-data.frame()
   var.smpl1 <- variogram(f.1, training_df)
   plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp")))
+  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph")))
   
   plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
@@ -254,8 +254,8 @@ all_results<-data.frame()
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
     
   ## M2, using RF to predict the DON
-  v=1000
-  h=1000
+  v=250
+  h=850
   capture_zone_land<-function(df){
   num<-nrow(df)
   landscape_data<-data.frame()
@@ -326,8 +326,8 @@ all_results<-data.frame()
     
   }
   
-  WP2Train$DON<-log10(WP2Train$DON)
-  WP2Test$DON<-log10(WP2Test$DON)
+  #WP2Train$DON<-log10(WP2Train$DON)
+  #WP2Test$DON<-log10(WP2Test$DON)
   
   set.seed(seeds)
   WP2Train<-createDummyFeatures(WP2Train,target = "DON")
@@ -337,11 +337,6 @@ all_results<-data.frame()
   
   map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
-  
-  map2_predict$data$response<-10^map2_predict$data$response
-  map2_predict$data$truth<-10^map2_predict$data$truth
-  map2_train$data$response<-10^map2_train$data$response
-  map2_train$data$truth<-10^map2_train$data$truth
   
   M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
   M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
@@ -397,14 +392,14 @@ all_results<-data.frame()
   
   ## create the training and testing sets 
   ## build the model for map2
-  names(M4_train_withKN)[1:9]<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(M4_test_withKN)[1:9]<-c("Soil",  "Veg", "Landuse", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  #names(M4_train_withKN)[1:9]<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  #names(M4_test_withKN)[1:9]<-c("Soil",  "Veg", "Landuse", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
   
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(8,9)]
-  M4_test_withKN<-M4_test_withKN[,-c(8,9)]
+  M4_train_withKN<-M4_train_withKN[,-c(10)]
+  M4_test_withKN<-M4_test_withKN[,-c(10)]
   
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   
@@ -413,7 +408,7 @@ all_results<-data.frame()
   M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
-    for(i in c(5,6,10)){
+    for(i in c(5,6,8:11)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -429,8 +424,8 @@ all_results<-data.frame()
       }
   
   set.seed(seeds)
-  M4_train_withKN$DON<-log10(M4_train_withKN$DON)
-  M4_test_withKN$DON<-log10(M4_test_withKN$DON)
+  #M4_train_withKN$DON<-log10(M4_train_withKN$DON)
+  #M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
   M4_train_withKN<-createDummyFeatures(M4_train_withKN,target = "DON")
   M4_test_withKN<-createDummyFeatures(M4_test_withKN,target = "DON")
@@ -441,12 +436,7 @@ all_results<-data.frame()
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
 
-  map4_predict$data$response<-10^map4_predict$data$response
-  map4_predict$data$truth<-10^map4_predict$data$truth
-  map4_train$data$response<-10^map4_train$data$response
-  map4_train$data$truth<-10^map4_train$data$truth
-  
-  #  
+#  
   M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
