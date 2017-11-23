@@ -221,9 +221,9 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
-      reg_rf = makeLearner("reg.xgboost")
+      reg_rf = makeLearner("regr.xgboost")
       #class_rf$par.vals<-list(importance=T)
-      ctrl = makeTuneControlIrace(maxExperiments = 400L)
+      ctrl =makeTuneControlRandom(maxExperiments = 400L)
       rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
@@ -254,10 +254,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
         return(rf)
       }
     
-    a1=1
-    a2=2
-    print(a1)
-    print(a2)
+
  all_results<-data.frame()
 
 for (tt in c(13,14,19)){
@@ -286,11 +283,11 @@ for (tt in c(13,14,19)){
   
   # Compute the sample variogram; note that the f.1 trend model is one of the
   var.smpl1 <- variogram(f.1, training_df)
-  #plot(var.smpl1)
+  plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp")))
+  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph")))
   
-  #plot(var.smpl1,dat.fit1)
+  plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
@@ -300,6 +297,8 @@ for (tt in c(13,14,19)){
   
   M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
+  
+  map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
   
   M1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
 
@@ -344,8 +343,8 @@ for (tt in c(13,14,19)){
   #WP2Train<-reclass(M2_train,a1,a2)
   #WP2Test<-reclass(M2_test,a1,a2)
   
-  WP2Train<-WP2Train[,-c(4,5)]
-  WP2Test<-WP2Test[,-c(4,5)]
+  WP2Train<-M2_train[,-c(4,5)]
+  WP2Test<-M2_test[,-c(4,5)]
   
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   
@@ -368,6 +367,7 @@ for (tt in c(13,14,19)){
       }
   
   set.seed(seeds)
+  WP2Train<-createDummyFeatures(WP2Train,target = "DON")
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
   map2_predict <- predict(rf_DON_m2, newdata = WP2Test)
@@ -475,4 +475,6 @@ for (tt in c(13,14,19)){
     }
   
  
+ 
+
  

@@ -231,7 +231,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
         makeDiscreteParam("ntree", values=seq(300,500,20)),
         makeIntegerParam("nodesize", lower = 4, upper = 10),
         makeIntegerParam("mtry", lower = 4, upper =8),
-        makeDiscreteParam("coefReg", values=seq(0.05,0.5,0.05))
+        makeDiscreteParam("coefReg", values=seq(0.3,0.8,0.1))
       )
 
       model_build <- function(dataset, n_target) {
@@ -444,8 +444,8 @@ for (tt in c(13,14,19)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(4,5,12)]
-  M4_test_withKN<-M4_test_withKN[,-c(4,5,12)]
+  M4_train_withKN<-M4_train_withKN[,-c(4,5,10,11,12)]
+  M4_test_withKN<-M4_test_withKN[,-c(4,5,10,11,12)]
   
   #M4_train_withKN$DOC_SOIL<-M4_train_withKN$DOC_k*M4_train_withKN$Soil
   #M4_train_withKN$DOC_VEG<-M4_train_withKN$DOC_k*M4_train_withKN$Veg
@@ -465,7 +465,7 @@ for (tt in c(13,14,19)){
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
 
-      for(i in c(5,6,8:12)){
+      for(i in c(5,6,8:10)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
