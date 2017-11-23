@@ -158,14 +158,12 @@ water_distance@data@names<-"Distance_to_water"
 landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance)
 names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance")
 
-
 ## load the data 
 set.seed(666)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
-#all_g<-read.csv("~/WP2_GIT/all_g.csv",header=T)
-#all_g<-rbind(all_points[,c(1,2,3,4,5,7,8)],extra_all_N[,c(1,2,3,5,4,6,7)],GW_extra[,c(1,2,3,4,5,6,7)])
+
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
@@ -188,7 +186,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
         makeDiscreteParam("ntree", values=seq(300,500,20)),
         makeIntegerParam("nodesize", lower = 4, upper = 10),
         makeIntegerParam("mtry", lower = 4, upper =15),
-        makeDiscreteParam("coefReg", values=seq(0.3,0.5,0.1))
+        makeDiscreteParam("coefReg", values=seq(0.2,0.5,0.05))
       )
 
       model_build <- function(dataset, n_target) {
@@ -252,12 +250,12 @@ all_results<-data.frame()
   
   map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
 
-    M1_rmse_train<-postResample(map1_train[,2],map1_train[,1])[1]
-    M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
+  M1_rmse_train<-postResample(map1_train[,2],map1_train[,1])[1]
+  M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
     
   ## M2, using RF to predict the DON
-    v=1000
-    h=1000
+  v=1000
+  h=1000
   capture_zone_land<-function(df){
   num<-nrow(df)
   landscape_data<-data.frame()
@@ -273,7 +271,6 @@ all_results<-data.frame()
   }
   return(landscape_data)
   }
-  
   
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
@@ -398,7 +395,6 @@ all_results<-data.frame()
   M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
   names(M4_test_withKN) <- names(M4_train_withKN)
   
-  
   ## create the training and testing sets 
   ## build the model for map2
   names(M4_train_withKN)[1:9]<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
@@ -416,7 +412,6 @@ all_results<-data.frame()
    
   M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-
 
     for(i in c(5,6,10)){
     min_train<-min(M4_train_withKN[,i])
@@ -436,8 +431,6 @@ all_results<-data.frame()
   set.seed(seeds)
   M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   M4_test_withKN$DON<-log10(M4_test_withKN$DON)
-  M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
-  M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
   
   M4_train_withKN<-createDummyFeatures(M4_train_withKN,target = "DON")
   M4_test_withKN<-createDummyFeatures(M4_test_withKN,target = "DON")
@@ -464,8 +457,6 @@ all_results<-data.frame()
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
-  print(rf_DON_m2$learner)
-  print(rf_DON_m4$learner)
  
  }
  
