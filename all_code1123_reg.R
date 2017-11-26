@@ -138,8 +138,6 @@ depth <- read.csv("~/WP2/data/sampling_depth.csv",header=T) %>% read_pointDatafr
 f_depth <- as.formula(sampling_d ~ 1)
 # Add X and Y to training 
 depth<-add_S1S2(depth)
-# Run the regression model
-lm.depth <- lm(f_depth, data = depth)
 # variogram on the de-trended data.
 var.depth <- variogram(f_depth, depth)
 #plot(var.depth)
@@ -179,18 +177,18 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       reg_rf = makeLearner("regr.RRF")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 5)
+      rdesc = makeResampleDesc("CV", iters = 3)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(100,200,20)),
-        makeIntegerParam("nodesize", lower = 4, upper = 10),
-        makeIntegerParam("mtry", lower = 4, upper =12),
-        makeDiscreteParam("coefReg", values=seq(0.1,0.3,0.05))
+        makeDiscreteParam("ntree", values=seq(200,500,50)),
+        makeIntegerParam("nodesize", lower = 4, upper = 6),
+        makeIntegerParam("mtry", lower = 6, upper =12),
+        makeDiscreteParam("coefReg", values=seq(0.05,0.3,0.05))
       )
 
       model_build <- function(dataset, n_target) {
-        set.seed(719)
+        #set.seed(719)
           ## define the regression task for DON 
           WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
           ## cross validation
@@ -201,7 +199,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
           lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
         
         ## train the final model 
-        set.seed(719)
+        #set.seed(719)
         rf <- mlr::train(lrn_rf, WP3_target)
         return(rf)
       }
@@ -212,7 +210,7 @@ all_results<-data.frame()
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .8, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
   
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]
