@@ -328,8 +328,8 @@ all_results<-data.frame()
   #WP2Test$DON<-log10(WP2Test$DON)
   
   set.seed(seeds)
-  WP2Train<-createDummyFeatures(WP2Train,target = "DON")
-  WP2Test<-createDummyFeatures(WP2Test,target = "DON")
+  #WP2Train<-createDummyFeatures(WP2Train,target = "DON")
+  #WP2Test<-createDummyFeatures(WP2Test,target = "DON")
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -425,8 +425,8 @@ all_results<-data.frame()
   #M4_train_withKN$DON<-log10(M4_train_withKN$DON)
   #M4_test_withKN$DON<-log10(M4_test_withKN$DON)
   
-  M4_train_withKN<-createDummyFeatures(M4_train_withKN,target = "DON")
-  M4_test_withKN<-createDummyFeatures(M4_test_withKN,target = "DON")
+  #M4_train_withKN<-createDummyFeatures(M4_train_withKN,target = "DON")
+  #M4_test_withKN<-createDummyFeatures(M4_test_withKN,target = "DON")
   
   rf_DON_m4<-model_build(M4_train_withKN,"DON")
   
