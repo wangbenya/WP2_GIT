@@ -183,10 +183,10 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(300,800,50)),
+        makeDiscreteParam("ntree", values=seq(100,200,20)),
         makeIntegerParam("nodesize", lower = 4, upper = 10),
         makeIntegerParam("mtry", lower = 4, upper =12),
-        makeDiscreteParam("coefReg", values=seq(0.2,0.4,0.05))
+        makeDiscreteParam("coefReg", values=seq(0.1,0.3,0.05))
       )
 
       model_build <- function(dataset, n_target) {
@@ -208,8 +208,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
-# for (tt in seq(1,5)){
-      tt=1
+ for (tt in seq(1,5)){
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
@@ -255,9 +254,8 @@ all_results<-data.frame()
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
     
   ## M2, using RF to predict the DON
-  all_ab<-data.frame()
-  for (a in seq(50,1000,100)){
-   for (b in seq(50,1000,100)){
+  a=150
+  b=750
   capture_zone_land<-function(df){
   num<-nrow(df)
   landscape_data<-data.frame()
@@ -437,21 +435,17 @@ all_results<-data.frame()
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
-
 #  
   M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_ab<-data.frame(a,b,M2_r2,M2_r2_train,M4_r2,M4_r2_train)
-  all_ab<-rbind(all_ab,sing_ab)
-  }}
   sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
   
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
  
- #}
+ }
  
  
