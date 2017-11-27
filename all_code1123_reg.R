@@ -171,6 +171,13 @@ set.seed(666)
 seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
+extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
+extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
+DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
+DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
+NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
+NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
+TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
       ## set the parameters for mlr
       seed=35
