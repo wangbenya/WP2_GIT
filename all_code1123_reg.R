@@ -48,7 +48,6 @@ pre <- function(x) {
   return(x)
 }
 
-
 read_points <- function(read_data) {
   SP <- SpatialPoints(read_data[, 2:3], proj4string = CRS("+proj=longlat +ellps=GRS80 +no_defs"))
   SP <- spTransform(SP, WGS84)
@@ -98,7 +97,6 @@ get_landscape<-function(df){
   }
   return(landscape_all)
 }
-
 
 ## preprocess the landscape raster
 Soil <- pre(Soil)
@@ -170,7 +168,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 set.seed(666)
 seed.list<-sample(1:1000,50,replace =F)
 
-all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
+all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
@@ -190,7 +188,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
         makeDiscreteParam("ntree", values=seq(200,500,50)),
-        makeIntegerParam("nodesize", lower = 1, upper = 6),
+        makeIntegerParam("nodesize", lower = 2, upper = 6),
         makeIntegerParam("mtry", lower = 2, upper =6),
         makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
       )
@@ -214,15 +212,11 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
-<<<<<<< HEAD
  for (tt in c(8)){
-=======
- for (tt in c(1:10)){
->>>>>>> 3b70da6b96b04f7c49d7a3180bea160139567198
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .9, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
 
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]
