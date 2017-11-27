@@ -214,12 +214,16 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
+<<<<<<< HEAD
  for (tt in c(8)){
+=======
+ for (tt in c(1:10)){
+>>>>>>> 3b70da6b96b04f7c49d7a3180bea160139567198
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
       trainIndex <- createDataPartition(all_points$DON, p = .9, list = FALSE)
-  
+
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]
   
