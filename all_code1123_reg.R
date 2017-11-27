@@ -48,6 +48,7 @@ pre <- function(x) {
   return(x)
 }
 
+
 read_points <- function(read_data) {
   SP <- SpatialPoints(read_data[, 2:3], proj4string = CRS("+proj=longlat +ellps=GRS80 +no_defs"))
   SP <- spTransform(SP, WGS84)
@@ -91,7 +92,8 @@ get_landscape<-function(df){
     Catchment=tail(names(sort(table(aa[,4]))),1)
     GW_depth=mean(aa[,5])
     Distance=mean(aa[,6])
-    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance)
+    Distance_LP=mean(aa[,7])
+    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance,Distance_LP)
     landscape_all<-rbind(landscape_all,sing_land)
   }
   return(landscape_all)
@@ -152,9 +154,17 @@ depth_k@data@names<-"GW_depth"
 water <- raster::rasterize(water, depth_k)
 water_distance <- raster::mask(distance(water),study_area)
 water_distance@data@names<-"Distance_to_water"
+
+
+left_up<-water 
+values(left_up)<-NA
+values(left_up)[[1]]<-1
+distance_LP <-raster::mask(distance(left_up),study_area)
+distance_LP@data@names<-"Distance_LP"
+
 ## load the data 
-landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance)
-names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance")
+landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP)
+names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP")
 
 ## load the data 
 set.seed(666)
@@ -162,22 +172,13 @@ seed.list<-sample(1:1000,50,replace =F)
 
 all_points<-read.csv("~/WP2/data/all_data1210.csv",header = T)
 
-extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
-extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
-DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
-NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
-NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
-TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
-
-
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
       reg_rf = makeLearner("regr.RRF")
       #class_rf$par.vals<-list(importance=T)
       ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 3)
+      rdesc = makeResampleDesc("CV", iters = 5)
       
       ## define the parameter spaces for RF      
       para_rf = makeParamSet(
@@ -206,11 +207,11 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
- for (tt in seq(1,5)){
+ for (tt in c(1:5)){
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .75, list = FALSE)
+      trainIndex <- createDataPartition(all_points$DON, p = .9, list = FALSE)
   
       training <- all_points[trainIndex,]
       testing <- all_points[-trainIndex,]
@@ -273,8 +274,8 @@ all_results<-data.frame()
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Longitude","Latitude")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Longitude","Latitude")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -298,17 +299,21 @@ all_results<-data.frame()
   }
   
   ## build the model for map2
-  names(M2_train)<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  names(M2_test)<-c("Soil",  "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
+  #names(M2_train)<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
+  #names(M2_test)<-c("Soil",  "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
   
   WP2Train<-M2_train
   WP2Test<-M2_test
+  #WP2Train$Latitude<--WP2Train$Latitude
+  #M2_test$Latitude<--M2_test$Latitude
   
   WP2Train$Distance<-log10(WP2Train$Distance+0.01)
-  
   WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  for(i in c(5,6,8,9)){
+  WP2Train$Distance_LP<-log10(WP2Train$Distance_LP+0.01)
+  WP2Test$Distance_LP<-log10(WP2Test$Distance_LP+0.01)
+  
+  for(i in c(5,6,7,9,10)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -324,12 +329,9 @@ all_results<-data.frame()
     
   }
   
-  #WP2Train$DON<-log10(WP2Train$DON)
-  #WP2Test$DON<-log10(WP2Test$DON)
-  
   set.seed(seeds)
-  #WP2Train<-createDummyFeatures(WP2Train,target = "DON")
-  #WP2Test<-createDummyFeatures(WP2Test,target = "DON")
+  WP2Train<-WP2Train[,-c(6,9)]
+  WP2Test<-WP2Test[,-c(6,9)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -396,17 +398,19 @@ all_results<-data.frame()
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(10)]
-  M4_test_withKN<-M4_test_withKN[,-c(10)]
+  M4_train_withKN<-M4_train_withKN[,-c(6,9,11)]
+  M4_test_withKN<-M4_test_withKN[,-c(6,9,11)]
   
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
-  
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
    
-  M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
-  M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
+  M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
+  M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
+  
+  #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
+  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
-    for(i in c(5,6,8:11)){
+    for(i in c(5,6,8:9)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -422,18 +426,13 @@ all_results<-data.frame()
       }
   
   set.seed(seeds)
-  #M4_train_withKN$DON<-log10(M4_train_withKN$DON)
-  #M4_test_withKN$DON<-log10(M4_test_withKN$DON)
-  
-  #M4_train_withKN<-createDummyFeatures(M4_train_withKN,target = "DON")
-  #M4_test_withKN<-createDummyFeatures(M4_test_withKN,target = "DON")
   
   rf_DON_m4<-model_build(M4_train_withKN,"DON")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
-#  
+# 
   M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
@@ -447,3 +446,10 @@ all_results<-data.frame()
  }
  
  
+
+
+ggplot(data=as.data.frame(training_df),aes(x=training_df$s1,y=training_df$s2))+
+    geom_point(col="red",aes(size=training_df$DON))+theme_bw()+
+    geom_point(data=as.data.frame(testing_df),aes(x=testing_df$s1,y=testing_df$s2),col="blue",size=testing_df$DON)
+
+
