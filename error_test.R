@@ -126,11 +126,21 @@ points(402000,6460000)
 points(402000,6448000)
 points(402000,6403000)
 
-GW_center<-data.frame(Longitude=c(6495000,6475000,6460000,6448000,6403000),Latitude=rep(402000,5)6403000)
+GW_center<-data.frame(Latitude=c(6495000,6475000,6460000,6448000,6403000),LongitudeLatitu=rep(402000,5),values=1)
 
-values(depth_k2)[[10100]]<-100
-plot(depth_k2)
-
-distance_LP <-raster::mask(distance(left_up),study_area)
+GW_center <- SpatialPoints(GW_center[, c(2:1)], proj4string = WGS84)
+GW_center@bbox <- study_area@bbox
+  
 distance_LP@data@names<-"Distance_LP"
+  
+
+d1<-distanceFromPoints(left_up,GW_center)
+
+
+plot(d1)
+
+
+left_up<-water 
+values(left_up)<-1
+values(left_up)[[1]]<-1
 
