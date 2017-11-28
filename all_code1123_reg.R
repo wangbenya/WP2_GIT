@@ -270,7 +270,10 @@ for (tt in c(10)){
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
   
   ## M2, using RF to predict the DON
-  
+  all_ab<-data.frame()
+  for (a in seq(50,1500,100)){
+    for (b in seq(50,500,100)){
+      
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -287,10 +290,7 @@ for (tt in c(10)){
     return(landscape_data)
   }
   
-  all_ab<-data.frame()
-  for (aa in seq(50,1500,100)){
-    for (bb in seq(50,500,100)){
-  landscape_train <- capture_zone_land(training_df)
+   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Collect_Month","date_","s1","s2")])
