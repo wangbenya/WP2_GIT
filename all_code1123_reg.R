@@ -188,7 +188,6 @@ NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 all_points<-subset(all_points,all_points$DON<=4.0)
-all_points$Collect_Month<-as.factor(all_points$Collect_Month)
 
 ## set the parameters for mlr
 seed=35
@@ -200,9 +199,9 @@ rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 2, upper = 6),
-  makeIntegerParam("mtry", lower = 4, upper =10)
+  makeDiscreteParam("ntree", values=seq(50,200,20)),
+  makeIntegerParam("nodesize", lower = 20, upper = 25),
+  makeIntegerParam("mtry", lower = 2, upper =6)
   #makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -225,11 +224,11 @@ model_build <- function(dataset, n_target) {
 
 all_results<-data.frame()
 
-for (tt in c(10)){
+for (tt in c(t)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
   
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
@@ -270,10 +269,8 @@ for (tt in c(10)){
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
   
   ## M2, using RF to predict the DON
-  all_ab<-data.frame()
-  for (a in seq(50,1500,100)){
-    for (b in seq(50,500,100)){
-      
+  a=500
+  b=100
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -346,8 +343,8 @@ for (tt in c(10)){
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(6,11,13)]
-  WP2Test<-WP2Test[,-c(6,11,13)]
+  WP2Train<-WP2Train[,-c(6,11)]
+  WP2Test<-WP2Test[,-c(6,11)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -453,11 +450,6 @@ for (tt in c(10)){
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_ab<-data.frame(a,b,M2_r2,M4_r2,M2_r2_train,M4_r2_train)
-  all_ab<-rbind(all_ab,sing_ab)
-  print(all_ab)
-    }}
-   print(all_ab)
   sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
   
   all_results<-rbind(all_results,sing_acc)
@@ -465,10 +457,4 @@ for (tt in c(10)){
   print(all_results)
   
 }
-
-
-ggplot(data=as.data.frame(training_df),aes(x=training_df$s1,y=training_df$s2))+
-  geom_point(col="red",aes(size=training_df$DON))+theme_bw()+
-  geom_point(data=as.data.frame(testing_df),aes(x=testing_df$s1,y=testing_df$s2),col="blue",size=testing_df$DON)
-
 
