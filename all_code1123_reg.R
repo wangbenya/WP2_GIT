@@ -176,7 +176,7 @@ DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
 NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
-
+all_points<-subset(all_points,all_points$DON<=4.0)
       ## set the parameters for mlr
       seed=35
       set.seed(seed)
@@ -212,7 +212,7 @@ TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 
 all_results<-data.frame()
 
- for (tt in c(8)){
+ for (tt in c(10)){
       print(tt)
       seeds<-seed.list[tt]
       set.seed(seeds)
@@ -222,11 +222,10 @@ all_results<-data.frame()
       testing <- all_points[-trainIndex,]
   
   ## load the point data 
-  training_df <- training[,c(1,2,3,5)] %>% read_pointDataframes(.)
+  training_df <- read_pointDataframes(training)
   testing_df <-  read_pointDataframes(testing) 
   
-  training_points<-training[,c(1,2,3,5)] %>% read_points(.)
-  
+  training_points<- read_points(training)
   testing_points <- read_points(testing)
   
   ## map1, using kringing for DON interpolation
@@ -279,8 +278,8 @@ all_results<-data.frame()
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Collect_Month","date_","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Collect_Month","date_","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -318,7 +317,7 @@ all_results<-data.frame()
   WP2Train$Distance_LP<-log10(WP2Train$Distance_LP+0.01)
   WP2Test$Distance_LP<-log10(WP2Test$Distance_LP+0.01)
   
-  for(i in c(5,6,7,9,10)){
+  for(i in c(5,6,7,9:12)){
 
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -335,8 +334,8 @@ all_results<-data.frame()
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(6,9)]
-  WP2Test<-WP2Test[,-c(6,9)]
+  WP2Train<-WP2Train[,-c(6,11)]
+  WP2Test<-WP2Test[,-c(6,11)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -353,8 +352,8 @@ all_results<-data.frame()
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
-  training_DOC <- training[,c(1,2,3,4)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
-    rbind(.,DOC_GW4) %>% subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
+  training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
+     subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
   
   training_DOC<-add_S1S2(training_DOC)
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
@@ -403,8 +402,8 @@ all_results<-data.frame()
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(6,9,11)]
-  M4_test_withKN<-M4_test_withKN[,-c(6,9,11)]
+  M4_train_withKN<-M4_train_withKN[,-c(6,11,13)]
+  M4_test_withKN<-M4_test_withKN[,-c(6,11,13)]
   
   M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -415,7 +414,7 @@ all_results<-data.frame()
   #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
 
-    for(i in c(5,6,8:9)){
+    for(i in c(5,6,8:11)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     

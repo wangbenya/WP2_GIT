@@ -109,8 +109,28 @@ ggplot(data=as.data.frame(training_df),aes(x=training_df$Longitude,y=training_df
 training_df$error<-(map2_train$data$truth-map2_train$data$response)^2
 testing_df$error<-(map2_predict$data$truth-map2_predict$data$response)^2
 
-as.data.frame(testing_df) %>% round(.,3) %>% .[,c(2,3,5,11)]
+as.data.frame(testing_df[,c(2,3,8,14)]) %>% round(.,3)
 
 ggplot(data=all_points,aes(x="DON",y=all_points$DON))+geom_boxplot()
 
+
+plot(map2_train$data$truth,map2_train$data$response)
+plot(map2_predict$data$truth,map2_predict$data$response)
+
+
+depth_k2<-raster::mask(depth_k,water,inverse=T)
+plot(depth_k2)
+points(402000,6495000)
+points(402000,6475000)
+points(402000,6460000)
+points(402000,6448000)
+points(402000,6403000)
+
+GW_center<-data.frame(Longitude=c(6495000,6475000,6460000,6448000,6403000),Latitude=rep(402000,5)6403000)
+
+values(depth_k2)[[10100]]<-100
+plot(depth_k2)
+
+distance_LP <-raster::mask(distance(left_up),study_area)
+distance_LP@data@names<-"Distance_LP"
 
