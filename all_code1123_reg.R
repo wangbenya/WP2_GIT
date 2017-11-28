@@ -21,7 +21,7 @@ library(automap)
 library(reshape2)
 
 ## start the parallel 
-parallelStartSocket(16)
+parallelStartSocket(4)
 
 WGS84 <- CRS("+proj=utm +zone=50 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
@@ -92,7 +92,8 @@ get_landscape<-function(df){
     GW_depth=mean(aa[,5])
     Distance=mean(aa[,6])
     Distance_LP=mean(aa[,7])
-    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance,Distance_LP)
+    Distance_GWC=mean(aa[,8])
+    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance,Distance_LP,Distance_GWC)
     landscape_all<-rbind(landscape_all,sing_land)
   }
   return(landscape_all)
@@ -160,9 +161,18 @@ values(left_up)[[1]]<-1
 distance_LP <-raster::mask(distance(left_up),study_area)
 distance_LP@data@names<-"Distance_LP"
 
+
+GW_center<-data.frame(Latitude=c(6495000,6475000,6460000,6448000,6403000),Longitude=rep(402000,5),values=1)
+GW_center <- SpatialPoints(GW_center[, c(2:1)], proj4string = WGS84)
+GW_center@bbox <- study_area@bbox
+base_GWC<-water 
+values(base_GWC)<-1
+Distance_GWC<-distanceFromPoints(base_GWC,GW_center)
+Distance_GWC@data@names<-"Distance_GWC"
+
 ## load the data 
-landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP)
-names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP")
+landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP,Distance_GWC)
+names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP","Distance_GWC")
 
 ## load the data 
 set.seed(666)
@@ -176,50 +186,53 @@ DOC_GW4<-read.csv("~/WP2_GIT/DOC_GW4.csv",header = T)
 NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
+extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 all_points<-subset(all_points,all_points$DON<=4.0)
-      ## set the parameters for mlr
-      seed=35
-      set.seed(seed)
-      reg_rf = makeLearner("regr.RRF")
-      #class_rf$par.vals<-list(importance=T)
-      ctrl = makeTuneControlIrace(maxExperiments = 200L)
-      rdesc = makeResampleDesc("CV", iters = 5)
-      
-      ## define the parameter spaces for RF      
-      para_rf = makeParamSet(
-        makeDiscreteParam("ntree", values=seq(200,500,50)),
-        makeIntegerParam("nodesize", lower = 2, upper = 6),
-        makeIntegerParam("mtry", lower = 2, upper =6),
-        makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
-      )
+all_points$Collect_Month<-as.factor(all_points$Collect_Month)
 
-      model_build <- function(dataset, n_target) {
-        #set.seed(719)
-          ## define the regression task for DON 
-          WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-          ## cross validation
-          ## 10-fold cross-validation
-          rin = makeResampleInstance(rdesc, task = WP3_target)
-          res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                                   show.info = FALSE,measures=rsq)
-          lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
-        
-        ## train the final model 
-        #set.seed(719)
-        rf <- mlr::train(lrn_rf, WP3_target)
-        return(rf)
-      }
+## set the parameters for mlr
+seed=35
+set.seed(seed)
+reg_rf = makeLearner("regr.randomForest")
+#class_rf$par.vals<-list(importance=T)
+ctrl = makeTuneControlIrace(maxExperiments = 200L)
+rdesc = makeResampleDesc("CV", iters = 5)
+
+## define the parameter spaces for RF      
+para_rf = makeParamSet(
+  makeDiscreteParam("ntree", values=seq(200,500,50)),
+  makeIntegerParam("nodesize", lower = 2, upper = 6),
+  makeIntegerParam("mtry", lower = 4, upper =10)
+  #makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
+)
+
+model_build <- function(dataset, n_target) {
+  #set.seed(719)
+  ## define the regression task for DON 
+  WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
+  ## cross validation
+  ## 10-fold cross-validation
+  rin = makeResampleInstance(rdesc, task = WP3_target)
+  res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+                           show.info = FALSE,measures=rsq)
+  lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
+  
+  ## train the final model 
+  #set.seed(719)
+  rf <- mlr::train(lrn_rf, WP3_target)
+  return(rf)
+}
 
 all_results<-data.frame()
 
- for (tt in c(10)){
-      print(tt)
-      seeds<-seed.list[tt]
-      set.seed(seeds)
-      trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
-
-      training <- all_points[trainIndex,]
-      testing <- all_points[-trainIndex,]
+for (tt in c(10)){
+  print(tt)
+  seeds<-seed.list[tt]
+  set.seed(seeds)
+  trainIndex <- createDataPartition(all_points$DON, p = .85, list = FALSE)
+  
+  training <- all_points[trainIndex,]
+  testing <- all_points[-trainIndex,]
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
@@ -252,29 +265,31 @@ all_results<-data.frame()
   M1_r2<-postResample(map1_predict[,2],map1_predict[,1])[2]
   
   map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
-
+  
   M1_rmse_train<-postResample(map1_train[,2],map1_train[,1])[1]
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
-    
+  
   ## M2, using RF to predict the DON
-  a=150
-  b=750
+  
   capture_zone_land<-function(df){
-  num<-nrow(df)
-  landscape_data<-data.frame()
-  for (r in seq(1,num)){
-  p1_long<-df@coords[r,1]
-  p1_lat<-df@coords[r,2]
-  pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long,p1_lat+a),c(p1_long+sqrt(2)/2*b,p1_lat+a+sqrt(2)/2*b),
-                       c(p1_long+a+sqrt(2)/2*b,p1_lat+sqrt(2)/2*b),c(p1_long+a,p1_lat),c(p1_long,p1_lat)))  
-  projection(pg)<- WGS84
-  p1_landscape<-raster::extract(landscapes,pg)
-  p1_landscape<-get_landscape(p1_landscape)
-  landscape_data<-rbind(landscape_data,p1_landscape)
-  }
-  return(landscape_data)
+    num<-nrow(df)
+    landscape_data<-data.frame()
+    for (r in seq(1,num)){
+      p1_long<-df@coords[r,1]
+      p1_lat<-df@coords[r,2]
+      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+a,p1_lat+b),c(p1_long+2*a,p1_lat+b),
+                           c(p1_long+2*a,p1_lat-b),c(p1_long+a,p1_lat-b),c(p1_long,p1_lat)))  
+      projection(pg)<- WGS84
+      p1_landscape<-raster::extract(landscapes,pg)
+      p1_landscape<-get_landscape(p1_landscape)
+      landscape_data<-rbind(landscape_data,p1_landscape)
+    }
+    return(landscape_data)
   }
   
+  all_ab<-data.frame()
+  for (aa in seq(50,1500,100)){
+    for (bb in seq(50,500,100)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
@@ -288,18 +303,18 @@ all_results<-data.frame()
     land_common<-subset(land_dataset,land_dataset[,2]==max(land_dataset[,2]))[1]
     return(as.matrix(land_common))
   }
-    
+  
   soil_max = common_landscape("Soil")[1]
   veg_max=common_landscape("Veg")[1]
   landuse_max = common_landscape("Landuse")[1]
   cat_max = common_landscape("Catchment")[1]
   
   max_list<-list(soil_max,veg_max,landuse_max,cat_max)
-
+  
   for (ii in seq(1,4)){
-      M2_train[,ii]<-as.factor(M2_train[,ii])
-      M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
-      M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
+    M2_train[,ii]<-as.factor(M2_train[,ii])
+    M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
+    M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
   }
   
   ## build the model for map2
@@ -311,14 +326,11 @@ all_results<-data.frame()
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
   
-  WP2Train$Distance<-log10(WP2Train$Distance+0.01)
-  WP2Test$Distance<-log10(WP2Test$Distance+0.01)
+  #WP2Train$Distance<-log10(WP2Train$Distance+0.01)
+  #WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  WP2Train$Distance_LP<-log10(WP2Train$Distance_LP+0.01)
-  WP2Test$Distance_LP<-log10(WP2Test$Distance_LP+0.01)
-  
-  for(i in c(5,6,7,9:12)){
-
+  for(i in c(5:8,11:13)){
+    
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
     
@@ -334,8 +346,8 @@ all_results<-data.frame()
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(6,11)]
-  WP2Test<-WP2Test[,-c(6,11)]
+  WP2Train<-WP2Train[,-c(6,11,13)]
+  WP2Test<-WP2Test[,-c(6,11,13)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -353,7 +365,7 @@ all_results<-data.frame()
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
   training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
-     subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
+    subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
   
   training_DOC<-add_S1S2(training_DOC)
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
@@ -370,15 +382,15 @@ all_results<-data.frame()
   names(kriging_nutrietn) <- c("DON_k","DOC_k")
   
   ## extract the data from landscapes_withN
-
+  
   capture_zone_nutrient<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
     for (r in seq(1,num)){
       p1_long<-df@coords[r,1]
       p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long,p1_lat+a),c(p1_long+sqrt(2)/2*b,p1_lat+a+sqrt(2)/2*b),
-                       c(p1_long+a+sqrt(2)/2*b,p1_lat+sqrt(2)/2*b),c(p1_long+a,p1_lat),c(p1_long,p1_lat)))  
+      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+a,p1_lat+b),c(p1_long+2*a,p1_lat+b),
+                           c(p1_long+2*a,p1_lat-b),c(p1_long+a,p1_lat-b),c(p1_long,p1_lat)))  
       projection(pg)<- WGS84
       p1_landscape<-raster::extract(kriging_nutrietn,pg)
       land_data<-data.frame(DON_k=mean(p1_landscape[[1]][,1]),DOC_k=mean(p1_landscape[[1]][,2]))
@@ -402,19 +414,19 @@ all_results<-data.frame()
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(6,11,13)]
-  M4_test_withKN<-M4_test_withKN[,-c(6,11,13)]
+  M4_train_withKN<-M4_train_withKN[,-c(6,11,13,14)]
+  M4_test_withKN<-M4_test_withKN[,-c(6,11,13,14)]
   
-  M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
-  M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
-   
-  M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
-  M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
+  #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
+  #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
+  
+  #M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
+  #M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
   
   #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-
-    for(i in c(5,6,8:11)){
+  
+  for(i in c(5:7,9:11)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -427,7 +439,7 @@ all_results<-data.frame()
     M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
     M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
     
-      }
+  }
   
   set.seed(seeds)
   
@@ -436,24 +448,26 @@ all_results<-data.frame()
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
-# 
+  # 
   M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
+  sing_ab<-data.frame(aa,bb,M2_r2,M4_r2,M2_r2_train,M4_r2_train)
+  all_ab<-rbind(all_ab,sing_ab)
+    }}
+  all_ab
   sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
   
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
- 
- }
- 
- 
+  
+}
 
 
 ggplot(data=as.data.frame(training_df),aes(x=training_df$s1,y=training_df$s2))+
-    geom_point(col="red",aes(size=training_df$DON))+theme_bw()+
-    geom_point(data=as.data.frame(testing_df),aes(x=testing_df$s1,y=testing_df$s2),col="blue",size=testing_df$DON)
+  geom_point(col="red",aes(size=training_df$DON))+theme_bw()+
+  geom_point(data=as.data.frame(testing_df),aes(x=testing_df$s1,y=testing_df$s2),col="blue",size=testing_df$DON)
 
 
