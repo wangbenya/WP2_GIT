@@ -426,7 +426,7 @@ for (tt in c(10)){
   #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   
-  for(i in c(5:7,9:11)){
+  for(i in c(5:7,10:11)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
