@@ -21,7 +21,7 @@ library(automap)
 library(reshape2)
 
 ## start the parallel 
-parallelStartSocket(4)
+parallelStartSocket(16)
 
 WGS84 <- CRS("+proj=utm +zone=50 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
@@ -455,6 +455,7 @@ for (tt in c(10)){
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
   sing_ab<-data.frame(aa,bb,M2_r2,M4_r2,M2_r2_train,M4_r2_train)
   all_ab<-rbind(all_ab,sing_ab)
+  all_ab
     }}
   all_ab
   sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
