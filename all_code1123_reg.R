@@ -453,7 +453,7 @@ for (tt in c(10)){
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_ab<-data.frame(aa,bb,M2_r2,M4_r2,M2_r2_train,M4_r2_train)
+  sing_ab<-data.frame(a,b,M2_r2,M4_r2,M2_r2_train,M4_r2_train)
   all_ab<-rbind(all_ab,sing_ab)
   all_ab
     }}
