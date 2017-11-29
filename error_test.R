@@ -125,32 +125,12 @@ points(402000,6475000)
 points(402000,6460000)
 points(402000,6448000)
 points(402000,6403000)
-
-GW_center<-data.frame(Latitude=c(6495000,6475000,6460000,6448000,6403000),Longitude=rep(402000,5),values=1)
-GW_center <- SpatialPoints(GW_center[, c(2:1)], proj4string = WGS84)
-GW_center@bbox <- study_area@bbox
-base_GWC<-water 
-values(base_GWC)<-1
-Distance_GWC<-distanceFromPoints(base_GWC,GW_center)
-Distance_GWC@data@names<-"Distance_GWC"
-
-for (ii in c(5:8,11:13)){
-p1<-ggplot(data=WP2Train,aes(x=WP2Train[,ii],y=WP2Train$DON))+geom_point()+
-    theme_bw()+labs(x=names(WP2Train)[ii])
-plot(p1)
-}
-
-
-for (ii in c(5:8,11:13)){
-  p1<-ggplot(data=WP2Train,aes(x=WP2Train[,ii]))+geom_density()+
-    theme_bw()+labs(x=names(WP2Train)[ii])
-  plot(p1)
-}
+distance_LP <-raster::mask(distance(left_up),study_area)
+distance_LP@data@names<-"Distance_LP"
 
 
 ggplot(data=all_points,aes(x=all_points$Longitude,y=all_points$Latitude))+
-   geom_text(aes(label=all_points$Collect_Month,size=all_points$DON))+
+  geom_text(aes(label=all_points$Collect_Month,size=all_points$DON,col=all_points$Collect_Year))+
   theme_bw()
 
-
-
+ggplot()

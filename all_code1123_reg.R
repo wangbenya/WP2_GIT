@@ -187,7 +187,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-all_points<-subset(all_points,all_points$DON<=4.0)
+all_points<-subset(all_points,all_points$DON<=3.0)
 
 ## set the parameters for mlr
 seed=35
@@ -200,7 +200,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,200,20)),
-  makeIntegerParam("nodesize", lower = 20, upper = 25),
+  makeIntegerParam("nodesize", lower = 5, upper = 10),
   makeIntegerParam("mtry", lower = 2, upper =6)
   #makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -224,7 +224,7 @@ model_build <- function(dataset, n_target) {
 
 all_results<-data.frame()
 
-for (tt in c(t)){
+for (tt in c(3)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -320,6 +320,10 @@ for (tt in c(t)){
   
   WP2Train<-M2_train
   WP2Test<-M2_test
+  
+  WP2Train$date_<-(WP2Train$date_)^2
+  WP2Test$date_<-(WP2Test$date_)^2
+  
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
   
@@ -343,8 +347,8 @@ for (tt in c(t)){
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(6,11)]
-  WP2Test<-WP2Test[,-c(6,11)]
+  WP2Train<-WP2Train[,-c(6,14)]
+  WP2Test<-WP2Test[,-c(6,14)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -411,8 +415,11 @@ for (tt in c(t)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(6,11,13,14)]
-  M4_test_withKN<-M4_test_withKN[,-c(6,11,13,14)]
+  M4_train_withKN<-M4_train_withKN[,-c(6,13,14)]
+  M4_test_withKN<-M4_test_withKN[,-c(6,13,14)]
+  
+  M4_train_withKN$date_<-(M4_train_withKN$date_)^2
+  M4_test_withKN$date_<-(M4_test_withKN$date_)^2
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -423,7 +430,7 @@ for (tt in c(t)){
   #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   
-  for(i in c(5:7,10:11)){
+  for(i in c(5:7,10:12)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
