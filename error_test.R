@@ -133,4 +133,15 @@ ggplot(data=all_points,aes(x=all_points$Longitude,y=all_points$Latitude))+
   geom_text(aes(label=all_points$Collect_Month,size=all_points$DON,col=all_points$Collect_Year))+
   theme_bw()
 
-ggplot()
+g_train<-M4_train_withKN
+g_test<-M4_test_withKN
+g_predict_test<-map4_predict
+g_predict_train<-map4_train
+
+b_train<-M4_train_withKN
+b_test<-M4_test_withKN
+b_predict_test<-map4_predict
+b_predict_train<-map4_train
+
+
+ggplot(data=as.data.frame(g_predict_test$data),aes(x=g_predict_test$data$truth,y=g_predict_test$data$response))

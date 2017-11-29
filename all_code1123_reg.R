@@ -224,7 +224,7 @@ model_build <- function(dataset, n_target) {
 
 all_results<-data.frame()
 
-for (tt in c(1:10)){
+for (tt in c(5)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
