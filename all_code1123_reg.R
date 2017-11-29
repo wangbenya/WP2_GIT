@@ -224,7 +224,7 @@ model_build <- function(dataset, n_target) {
 
 all_results<-data.frame()
 
-for (tt in c(3)){
+for (tt in c(1:10)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -321,8 +321,8 @@ for (tt in c(3)){
   WP2Train<-M2_train
   WP2Test<-M2_test
   
-  WP2Train$date_<-(WP2Train$date_)^2
-  WP2Test$date_<-(WP2Test$date_)^2
+  WP2Train$date_<-(WP2Train$date_)^3
+  WP2Test$date_<-(WP2Test$date_)^3
   
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
@@ -418,8 +418,8 @@ for (tt in c(3)){
   M4_train_withKN<-M4_train_withKN[,-c(6,13,14)]
   M4_test_withKN<-M4_test_withKN[,-c(6,13,14)]
   
-  M4_train_withKN$date_<-(M4_train_withKN$date_)^2
-  M4_test_withKN$date_<-(M4_test_withKN$date_)^2
+  M4_train_withKN$date_<-(M4_train_withKN$date_)^3
+  M4_test_withKN$date_<-(M4_test_withKN$date_)^3
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
