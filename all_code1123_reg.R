@@ -177,7 +177,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-seed.list<-sample(1:1000,50,replace =F)
+seed.list<-sample(1:1000,200,replace =F)
 
 
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -313,10 +313,14 @@ for (tt in c(1:163)){
   max_list<-list(soil_max,veg_max,landuse_max,cat_max)
   
   for (ii in seq(1,4)){
-    M2_train[,ii]<-as.factor(M2_train[,ii])
+    M2_train[,ii]<-factor(M2_train[,ii],levels = unique(values(landscapes[[ii]]))[-1])
+    M2_test[,ii]<-factor(M2_test[,ii],levels=unique(values(landscapes[[ii]]))[-1])
     M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
-    M2_test[,ii]<-factor(M2_test[,ii],levels=levels(M2_train[,ii]))
-  }
+     
+    M2_train[,ii]<-droplevels(M2_train[,ii])
+    M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
+    
+    }
   
   ## build the model for map2
   #names(M2_train)<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
