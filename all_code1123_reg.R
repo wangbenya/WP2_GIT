@@ -1,3 +1,4 @@
+
 ## load the library 
 rm(list=ls())
 
@@ -178,6 +179,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 set.seed(666)
 seed.list<-sample(1:1000,50,replace =F)
 
+
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
@@ -187,7 +189,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-all_points<-subset(all_points,all_points$DON<=3.0)
+all_points<-subset(all_points,all_points$DON<=4.0)
 
 ## set the parameters for mlr
 seed=35
@@ -222,16 +224,18 @@ model_build <- function(dataset, n_target) {
   return(rf)
 }
 
+flds <- createFolds(all_points$WIN_Site_ID, k = 163, list = TRUE, returnTrain = FALSE)
+
 all_results<-data.frame()
 
-for (tt in c(5)){
+for (tt in c(1:163)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
+  # trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)
   
-  training <- all_points[trainIndex,]
-  testing <- all_points[-trainIndex,]
+  training <- all_points[-flds[[tt]],]
+  testing <- all_points[flds[[tt]],]
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
@@ -287,7 +291,7 @@ for (tt in c(5)){
     return(landscape_data)
   }
   
-   landscape_train <- capture_zone_land(training_df)
+  landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Collect_Month","date_","s1","s2")])
@@ -457,11 +461,14 @@ for (tt in c(5)){
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
+  sing_acc<-data.frame(M1_rmse,M2_rmse,M4_rmse,M1_rmse_train,M2_rmse_train,M4_rmse_train)
   
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
-  
 }
+
+
+
+
 
