@@ -177,7 +177,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-seed.list<-sample(1:1000,200,replace =F)
+seed.list<-sample(1:1000,300,replace =F)
 
 
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -189,7 +189,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-all_points<-subset(all_points,all_points$DON<=4.0)
+#all_points<-subset(all_points,all_points$DON<=4.0)
 
 ## set the parameters for mlr
 seed=35
@@ -224,11 +224,11 @@ model_build <- function(dataset, n_target) {
   return(rf)
 }
 
-flds <- createFolds(all_points$WIN_Site_ID, k = 163, list = TRUE, returnTrain = FALSE)
+flds <- createFolds(all_points$WIN_Site_ID, k = nrow(all_points), list = TRUE, returnTrain = FALSE)
 
 all_results<-data.frame()
 
-for (tt in c(1:163)){
+for (tt in c(1:nrow(all_points))){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
