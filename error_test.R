@@ -137,11 +137,43 @@ g_train<-M4_train_withKN
 g_test<-M4_test_withKN
 g_predict_test<-map4_predict
 g_predict_train<-map4_train
+g_training<-as.data.frame(training_df)
+g_testing<-as.data.frame(testing_df)
+g_training$error<-(g_predict_train$data$truth-g_predict_train$data$response)^2
+g_testing$error<-(g_predict_test$data$truth-g_predict_test$data$response)^2
+
+
 
 b_train<-M4_train_withKN
 b_test<-M4_test_withKN
 b_predict_test<-map4_predict
 b_predict_train<-map4_train
+b_training<-as.data.frame(training_df)
+b_testing<-as.data.frame(testing_df)
+b_training$error<-(b_predict_train$data$truth-b_predict_train$data$response)^2
+b_testing$error<-(b_predict_test$data$truth-b_predict_test$data$response)^2
 
 
-ggplot(data=as.data.frame(g_predict_test$data),aes(x=g_predict_test$data$truth,y=g_predict_test$data$response))
+ggplot(data=g_testing,aes(x=g_testing$Longitude,y=g_testing$Latitude))+
+  geom_point(col="red",aes(size=g_testing$error))+
+geom_point(data=g_training,col="black",aes(x=g_training$Longitude,y=g_training$Latitude,size=g_training$error))
+
+ggplot(data=b_testing,aes(x=b_testing$Longitude,y=b_testing$Latitude))+
+  geom_point(col="red",aes(size=b_testing$error))+
+  geom_point(data=b_training,col="black",aes(x=b_training$Longitude,y=b_training$Latitude,size=b_training$error))
+
+
+
+ggplot(data=as.data.frame(g_predict_test$data),aes(x=g_predict_test$data$truth,y=g_predict_test$data$response))+
+ geom_point()+lims(x=c(0,3),y=c(0,3))+geom_abline(slope = 1,intercept = 0,size=1)
+
+
+
+ggplot(data=as.data.frame(b_predict_test$data),aes(x=b_predict_test$data$truth,y=b_predict_test$data$response))+
+  geom_point()+lims(x=c(0,3),y=c(0,3))+geom_abline(slope = 1,intercept = 0,size=1)
+
+
+head(M4_train_withKN)
+
+
+

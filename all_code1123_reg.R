@@ -180,7 +180,7 @@ set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
 
 
-all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
+all_points<-read.csv("~/WP2/data/all_data1130.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
@@ -189,7 +189,7 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-#all_points<-subset(all_points,all_points$DON<=4.0)
+all_points<-subset(all_points,all_points$DON<=4.0)
 
 ## set the parameters for mlr
 seed=35
@@ -201,7 +201,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(50,200,20)),
+  makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 5, upper = 10),
   makeIntegerParam("mtry", lower = 2, upper =6)
   #makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
@@ -224,18 +224,16 @@ model_build <- function(dataset, n_target) {
   return(rf)
 }
 
-flds <- createFolds(all_points$WIN_Site_ID, k = nrow(all_points), list = TRUE, returnTrain = FALSE)
-
 all_results<-data.frame()
 
-for (tt in c(1:nrow(all_points))){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  # trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
   
-  training <- all_points[-flds[[tt]],]
-  testing <- all_points[flds[[tt]],]
+  training <- all_points[trainIndex,]
+  testing <- all_points[-trainIndex,]
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
@@ -329,8 +327,8 @@ for (tt in c(1:nrow(all_points))){
   WP2Train<-M2_train
   WP2Test<-M2_test
   
-  WP2Train$date_<-(WP2Train$date_)^3
-  WP2Test$date_<-(WP2Test$date_)^3
+  WP2Train$date_<-(WP2Train$date_)^2
+  WP2Test$date_<-(WP2Test$date_)^2
   
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
@@ -426,8 +424,8 @@ for (tt in c(1:nrow(all_points))){
   M4_train_withKN<-M4_train_withKN[,-c(6,13,14)]
   M4_test_withKN<-M4_test_withKN[,-c(6,13,14)]
   
-  M4_train_withKN$date_<-(M4_train_withKN$date_)^3
-  M4_test_withKN$date_<-(M4_test_withKN$date_)^3
+  M4_train_withKN$date_<-(M4_train_withKN$date_)^2
+  M4_test_withKN$date_<-(M4_test_withKN$date_)^2
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -465,7 +463,7 @@ for (tt in c(1:nrow(all_points))){
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_acc<-data.frame(M1_rmse,M2_rmse,M4_rmse,M1_rmse_train,M2_rmse_train,M4_rmse_train)
+  sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train,M4_r2_train)
   
   all_results<-rbind(all_results,sing_acc)
   
