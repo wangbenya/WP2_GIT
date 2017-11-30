@@ -180,7 +180,7 @@ set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
 
 
-all_points<-read.csv("~/WP2/data/all_data1130.csv",header = T)
+all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 DON_GW4<-read.csv("~/WP2_GIT/DON_GW4.csv",header = T)
@@ -211,20 +211,23 @@ newdata[newdata$dev<=1.5,"type"]=1
 newdata[newdata$dev>1.5,"type"]=0
 
 all_points<-data.frame(newdata)
+
+all_points<-subset(all_points,all_points$type==1)
+
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.randomForest")
+reg_rf = makeLearner("regr.ranfomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 200L)
 rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(200,500,50)),
+  makeDiscreteParam("ntree", values=seq(50,200,20)),
   makeIntegerParam("nodesize", lower = 5, upper = 10),
   makeIntegerParam("mtry", lower = 2, upper =6)
-  #makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
+#  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
 model_build <- function(dataset, n_target) {
