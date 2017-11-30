@@ -217,7 +217,7 @@ all_points<-subset(all_points,all_points$type==1)
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.ranfomForest")
+reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 200L)
 rdesc = makeResampleDesc("CV", iters = 5)
