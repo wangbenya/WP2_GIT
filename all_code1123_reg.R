@@ -189,8 +189,28 @@ NOx_GW4<-read.csv("~/WP2_GIT/NOx_GW4.csv",header = T)
 NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
-all_points<-subset(all_points,all_points$DON<=4.0)
 
+#Make a distance matrix
+all_points2<-read_pointDataframes(all_points)
+all_points2<-add_S1S2(all_points2)
+a=data.frame(all_points2)[,c('s1','s2')]
+d <- pointDistance(a, lonlat=F)
+n1.d <- apply(d, 1, function(x) order(x, decreasing=F)[2])
+n2.d <- apply(d, 1, function(x) order(x, decreasing=F)[3])
+n3.d <- apply(d, 1, function(x) order(x, decreasing=F)[4])
+n4.d <- apply(d, 1, function(x) order(x, decreasing=F)[5])
+n5.d <- apply(d, 1, function(x) order(x, decreasing=F)[6])
+
+newdata <- cbind(all_points2, all_points2[n1.d,"DON"],all_points2[n2.d,"DON"],all_points2[n3.d,"DON"],all_points2[n4.d,"DON"],all_points2[n5.d,"DON"])
+newdata$DON_m5<-(newdata$DON.1+newdata$DON.2+newdata$DON.3+newdata$DON.4+newdata$DON.5)/5
+
+newdata$variance<-(newdata$DON-newdata$DON_m5)^2
+newdata$dev<-abs(newdata$DON-newdata$DON_m5)/newdata$DON_m5
+
+newdata[newdata$dev<=1.5,"type"]=1
+newdata[newdata$dev>1.5,"type"]=0
+
+all_points<-data.frame(newdata)
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
@@ -330,6 +350,9 @@ for (tt in c(1:30)){
   WP2Train$date_<-(WP2Train$date_)^2
   WP2Test$date_<-(WP2Test$date_)^2
   
+  WP2Train$Distance_GWC<-(WP2Train$Distance_GWC)^2
+  WP2Test$Distance_GWC<-(WP2Test$Distance_GWC)^2
+  
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
   
@@ -426,6 +449,9 @@ for (tt in c(1:30)){
   
   M4_train_withKN$date_<-(M4_train_withKN$date_)^2
   M4_test_withKN$date_<-(M4_test_withKN$date_)^2
+  
+  M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
+  M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
