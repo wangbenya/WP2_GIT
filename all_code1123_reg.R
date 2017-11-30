@@ -207,8 +207,8 @@ newdata$DON_m5<-(newdata$DON.1+newdata$DON.2+newdata$DON.3+newdata$DON.4+newdata
 newdata$variance<-(newdata$DON-newdata$DON_m5)^2
 newdata$dev<-abs(newdata$DON-newdata$DON_m5)/newdata$DON_m5
 
-newdata[newdata$dev<=1.5,"type"]=1
-newdata[newdata$dev>1.5,"type"]=0
+newdata[newdata$dev<=1.2,"type"]=1
+newdata[newdata$dev>1.2,"type"]=0
 
 all_points<-data.frame(newdata)
 
@@ -225,7 +225,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,200,20)),
-  makeIntegerParam("nodesize", lower = 5, upper = 10),
+  makeIntegerParam("nodesize", lower = 10, upper = 15),
   makeIntegerParam("mtry", lower = 2, upper =6)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -295,7 +295,7 @@ for (tt in c(1:30)){
   
   ## M2, using RF to predict the DON
   a=500
-  b=100
+  b=150
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -355,6 +355,9 @@ for (tt in c(1:30)){
   
   WP2Train$Distance_GWC<-(WP2Train$Distance_GWC)^2
   WP2Test$Distance_GWC<-(WP2Test$Distance_GWC)^2
+  
+  WP2Train$GW_depth<-(WP2Train$GW_depth)^2
+  WP2Test$GW_depth<-(WP2Test$GW_depth)^2
   
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
@@ -455,6 +458,9 @@ for (tt in c(1:30)){
   
   M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
   M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
+  
+  M4_train_withKN$GW_depth<-(M4_train_withKN$GW_depth)^2
+  M4_test_withKN$GW_depth<-(M4_test_withKN$GW_depth)^2
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
