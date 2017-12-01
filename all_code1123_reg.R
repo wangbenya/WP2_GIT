@@ -356,8 +356,8 @@ for (tt in c(1:30)){
   WP2Train$Distance_GWC<-(WP2Train$Distance_GWC)^2
   WP2Test$Distance_GWC<-(WP2Test$Distance_GWC)^2
   
-  WP2Train$GW_depth<-(WP2Train$GW_depth)^2
-  WP2Test$GW_depth<-(WP2Test$GW_depth)^2
+  #WP2Train$GW_depth<-(WP2Train$GW_depth)^2
+  #WP2Test$GW_depth<-(WP2Test$GW_depth)^2
   
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
@@ -382,8 +382,8 @@ for (tt in c(1:30)){
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(6,14)]
-  WP2Test<-WP2Test[,-c(6,14)]
+  WP2Train<-WP2Train[,-c(7,12,13)]
+  WP2Test<-WP2Test[,-c(7,12,13)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -398,6 +398,7 @@ for (tt in c(1:30)){
   
   ## map4, kriging first and then rf
   # kriging for DOC
+
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
   training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
@@ -414,12 +415,32 @@ for (tt in c(1:30)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn<-stack(dat.krg_DON,dat.krg_DOC)
-  names(kriging_nutrietn) <- c("DON_k","DOC_k")
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
+  names(kriging_nutrietn_DOC) <- c("DOC_k")
+  
+  kriging_nutrietn_DON<-stack(dat.krg_DON)
+  names(kriging_nutrietn_DON) <- c("DON_k")
   
   ## extract the data from landscapes_withN
+  c=500
+  d=600
+  capture_zone_DOC<-function(df){
+    num<-nrow(df)
+    landscape_data<-data.frame()
+    for (r in seq(1,num)){
+      p1_long<-df@coords[r,1]
+      p1_lat<-df@coords[r,2]
+      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+c,p1_lat+d),c(p1_long+2*c,p1_lat+d),
+                           c(p1_long+2*c,p1_lat-d),c(p1_long+c,p1_lat-d),c(p1_long,p1_lat)))  
+      projection(pg)<- WGS84
+      p1_landscape<-raster::extract(kriging_nutrietn_DOC,pg)
+      land_data<-data.frame(DOC_k=mean(p1_landscape[[1]][,1],na.rm=T))
+      landscape_data<-rbind(landscape_data,land_data)
+    }
+    return(landscape_data)
+  }
   
-  capture_zone_nutrient<-function(df){
+  capture_zone_DON<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
     for (r in seq(1,num)){
@@ -428,15 +449,15 @@ for (tt in c(1:30)){
       pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+a,p1_lat+b),c(p1_long+2*a,p1_lat+b),
                            c(p1_long+2*a,p1_lat-b),c(p1_long+a,p1_lat-b),c(p1_long,p1_lat)))  
       projection(pg)<- WGS84
-      p1_landscape<-raster::extract(kriging_nutrietn,pg)
-      land_data<-data.frame(DON_k=mean(p1_landscape[[1]][,1]),DOC_k=mean(p1_landscape[[1]][,2]))
+      p1_landscape<-raster::extract(kriging_nutrietn_DON,pg)
+      land_data<-data.frame(DON_k=mean(p1_landscape[[1]][,1],na.rm=T))
       landscape_data<-rbind(landscape_data,land_data)
     }
     return(landscape_data)
   }
   
-  landscape_train_withKN <- capture_zone_nutrient(training_df)
-  landscape_test_withKN <- capture_zone_nutrient(testing_df)
+  landscape_train_withKN <- cbind(capture_zone_DON(training_df),capture_zone_DOC(training_df))
+  landscape_test_withKN <- cbind(capture_zone_DON(testing_df),capture_zone_DOC(testing_df))
   
   M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
   M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
@@ -450,8 +471,8 @@ for (tt in c(1:30)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(6,13,14)]
-  M4_test_withKN<-M4_test_withKN[,-c(6,13,14)]
+  M4_train_withKN<-M4_train_withKN[,-c(7,12,13)]
+  M4_test_withKN<-M4_test_withKN[,-c(7,12,13)]
   
   M4_train_withKN$date_<-(M4_train_withKN$date_)^2
   M4_test_withKN$date_<-(M4_test_withKN$date_)^2
@@ -459,8 +480,8 @@ for (tt in c(1:30)){
   M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
   M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
   
-  M4_train_withKN$GW_depth<-(M4_train_withKN$GW_depth)^2
-  M4_test_withKN$GW_depth<-(M4_test_withKN$GW_depth)^2
+ # M4_train_withKN$GW_depth<-(M4_train_withKN$GW_depth)^2
+ # M4_test_withKN$GW_depth<-(M4_test_withKN$GW_depth)^2
   
   #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
   #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
@@ -468,10 +489,10 @@ for (tt in c(1:30)){
   #M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
   #M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
   
-  #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
-  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
+  M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
+  M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   
-  for(i in c(5:7,10:12)){
+  for(i in c(5:7,10:13)){
     min_train<-min(M4_train_withKN[,i])
     max_train<-max(M4_train_withKN[,i])
     
@@ -504,7 +525,6 @@ for (tt in c(1:30)){
   
   print(all_results)
 }
-
 
 
 
