@@ -174,5 +174,17 @@ ggplot(data=as.data.frame(b_predict_test$data),aes(x=b_predict_test$data$truth,y
 
 head(M4_train_withKN)
 
+tune_land<-read.csv("D://Program//work package 2//WP2_1128//WP2//data//tune_land_results.csv",header=T)
+
+error_surface<-tune_land[,c(1:3)] 
+train_surface<-tune_land[,c(1,2,4)] 
+
+ggplot(data=error_surface,aes(x=error_surface$a,y=error_surface$b))+
+  geom_tile(aes(fill=error_surface$M2_r2))+scale_fill_continuous(low = "grey",high = "black")+
+  scale_x_continuous(breaks = seq(0,1500,100))+  scale_y_continuous(breaks = seq(0,1500,100))
+
+
+
+
 
 
