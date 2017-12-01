@@ -294,8 +294,8 @@ for (tt in c(1)){
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
   
   ## M2, using RF to predict the DON
-  a=700
-  b=1400
+  for (a in seq(100,1500,100)){
+    for (b in seq(100,3000,100)){
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -359,7 +359,7 @@ for (tt in c(1)){
   WP2Train$GW_depth<-(WP2Train$GW_depth)^2
   WP2Test$GW_depth<-(WP2Test$GW_depth)^2
   
-  WP2Train$Distance<-(WP2Train$Distance)^2
+  WP2Test$Distance<-(WP2Test$Distance)^2
   WP2Test$Distance<-(WP2Test$Distance)^2
   
   #WP2Train$Latitude<--WP2Train$Latitude
@@ -388,151 +388,25 @@ for (tt in c(1)){
   WP2Train<-WP2Train[,-c(7,12,13)]
   WP2Test<-WP2Test[,-c(7,12,13)]
   
-#  rf_DON_m2 <- model_build(WP2Train,"DON")
+  rf_DON_m2 <- model_build(WP2Train,"DON")
   
- # map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
-  #map2_train<-predict(rf_DON_m2,newdata=WP2Train)
+  map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
+  map2_train<-predict(rf_DON_m2,newdata=WP2Train)
   
-  #M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
-  #M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
+  M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
+  M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
   
-  #M2_rmse_train<-postResample(map2_train$data$response, map2_train$data$truth)[1]
-  #M2_r2_train<-postResample(map2_train$data$response, map2_train$data$truth)[2]
+  M2_rmse_train<-postResample(map2_train$data$response, map2_train$data$truth)[1]
+  M2_r2_train<-postResample(map2_train$data$response, map2_train$data$truth)[2]
   
-  ## map4, kriging first and then rf
-  # kriging for DOC
-  f.DOC <- as.formula(log10(DOC) ~ 1)
-  
-  training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
-    subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
-  
-  training_DOC<-add_S1S2(training_DOC)
-  var.smpl_DOC <- variogram(f.DOC, training_DOC)
-  plot(var.smpl_DOC)
-  
-  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp")))
-  plot(var.smpl_DOC,dat.fit_DOC)
-  # Perform the krige interpolation (note the use of the variogram model
-  dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
-  values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
-  
-  ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
-  names(kriging_nutrietn_DOC) <- c("DOC_k")
-  
-  kriging_nutrietn_DON<-stack(dat.krg_DON)
-  names(kriging_nutrietn_DON) <- c("DON_k")
-  
-  ## extract the data from landscapes_withN
-  for (c in seq(100,1500,100)){
-    for (d in seq(100,3000,100)){
-
-  capture_zone_DOC<-function(df){
-    num<-nrow(df)
-    landscape_data<-data.frame()
-    for (r in seq(1,num)){
-      p1_long<-df@coords[r,1]
-      p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+c,p1_lat+d),c(p1_long+2*c,p1_lat+d),
-                           c(p1_long+2*c,p1_lat-d),c(p1_long+c,p1_lat-d),c(p1_long,p1_lat)))  
-      projection(pg)<- WGS84
-      p1_landscape<-raster::extract(kriging_nutrietn_DOC,pg)
-      land_data<-data.frame(DOC_k=mean(p1_landscape[[1]][,1],na.rm=T))
-      landscape_data<-rbind(landscape_data,land_data)
-    }
-    return(landscape_data)
-  }
-  
-  capture_zone_DON<-function(df){
-    num<-nrow(df)
-    landscape_data<-data.frame()
-    for (r in seq(1,num)){
-      p1_long<-df@coords[r,1]
-      p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+a,p1_lat+b),c(p1_long+2*a,p1_lat+b),
-                           c(p1_long+2*a,p1_lat-b),c(p1_long+a,p1_lat-b),c(p1_long,p1_lat)))  
-      projection(pg)<- WGS84
-      p1_landscape<-raster::extract(kriging_nutrietn_DON,pg)
-      land_data<-data.frame(DON_k=mean(p1_landscape[[1]][,1],na.rm=T))
-      landscape_data<-rbind(landscape_data,land_data)
-    }
-    return(landscape_data)
-  }
-  
-  landscape_train_withKN <- cbind(capture_zone_DON(training_df),capture_zone_DOC(training_df))
-  landscape_test_withKN <- cbind(capture_zone_DON(testing_df),capture_zone_DOC(testing_df))
-  
-  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
-  names(M4_test_withKN) <- names(M4_train_withKN)
-  
-  ## create the training and testing sets 
-  ## build the model for map2
-  #names(M4_train_withKN)[1:9]<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  #names(M4_test_withKN)[1:9]<-c("Soil",  "Veg", "Landuse", "Catchment", "GW_depth", "Distance", "DON","Longitude","Latitude")
-  
-  #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
-  #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
-  
-  M4_train_withKN<-M4_train_withKN[,-c(7,12,13)]
-  M4_test_withKN<-M4_test_withKN[,-c(7,12,13)]
-  
-  M4_train_withKN$date_<-(M4_train_withKN$date_)^2
-  M4_test_withKN$date_<-(M4_test_withKN$date_)^2
-  
-  M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
-  M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
-  
-  M4_train_withKN$GW_depth<-(M4_train_withKN$GW_depth)^2
-  M4_test_withKN$GW_depth<-(M4_test_withKN$GW_depth)^2
-  
-  M4_train_withKN$Distance<-(M4_train_withKN$Distance)^2
-  M4_test_withKN$Distance<-(M4_test_withKN$Distance)^2
-  
-  #M4_train_withKN$Distance<-log10(M4_train_withKN$Distance+0.01)
-  #M4_test_withKN$Distance<-log10(M4_test_withKN$Distance+0.01)
-  
-  #M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
-  #M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
-  
-  #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
-  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-  
-  for(i in c(5:7,10:12)){
-    min_train<-min(M4_train_withKN[,i])
-    max_train<-max(M4_train_withKN[,i])
-    
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
-    
-    sd_train<-sd(M4_train_withKN[,i])
-    mean_train<-mean(M4_train_withKN[,i])
-    
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
-    
-  }
-  
-  set.seed(seeds)
-  
-  rf_DON_m4<-model_build(M4_train_withKN,"DON")
-  
+# create the training and testing sets
   ## map3 predict accuracy
-  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
-  map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
-  # 
-  M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
-  M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
-  M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
-  M4_r2_train<-postResample(map4_train$data$response,map4_train$data$truth)[2]
-  sing_acc<-data.frame(c,d,M4_r2,M4_r2_train)
-  
+  sing_acc<-data.frame(a,b,M2_r2,M2_r2_train)
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
 }
-}}
-
-
+}
+}
 
 
