@@ -185,6 +185,11 @@ ggplot(data=error_surface,aes(x=error_surface$a,y=error_surface$b))+
   scale_x_continuous(breaks = seq(0,1500,100))+  scale_y_continuous(breaks = seq(0,1500,100))
 
 
+ggplot(data=error_surface,aes(x=train_surface$a,y=train_surface$b))+
+  geom_tile(aes(fill=train_surface$M2_r2))+scale_fill_continuous(low = "grey",high = "black")+
+  scale_x_continuous(breaks = seq(0,1500,100))+  scale_y_continuous(breaks = seq(0,1500,100))
+
+
 
 
 
