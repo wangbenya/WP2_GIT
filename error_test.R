@@ -101,10 +101,9 @@ cor(WP2Train[,-c(1:4)])
 cor(WP2Test[,-c(1:4)])
 
 ggplot(data=as.data.frame(training_df),aes(x=training_df$Longitude,y=training_df$Latitude))+
-  geom_point(size=training_df$error)+
-  geom_point(data=as.data.frame(testing_df),aes(x=testing_df$Longitude,testing_df$Latitude),col="red",size=testing_df$error)+
+  geom_point(size=training_df$DON)+
+  geom_point(data=as.data.frame(testing_df),aes(x=testing_df$Longitude,testing_df$Latitude),col="red",size=testing_df$DON)+
   theme_bw()
-
 
 training_df$error<-(map2_train$data$truth-map2_train$data$response)^2
 testing_df$error<-(map2_predict$data$truth-map2_predict$data$response)^2
