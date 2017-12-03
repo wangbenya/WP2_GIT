@@ -247,7 +247,11 @@ for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
+<<<<<<< HEAD
   trainIndex <- createDataPartition(all_points$DON, p = 0.75, list = FALSE)
+=======
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
+>>>>>>> 5af47b6843bb9b26e7bf881856028bc8e7a49c4f
   
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
