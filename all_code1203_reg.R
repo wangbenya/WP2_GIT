@@ -155,13 +155,11 @@ water <- raster::rasterize(water, depth_k)
 water_distance <- raster::mask(distance(water),study_area)
 water_distance@data@names<-"Distance_to_water"
 
-
 left_up<-water 
 values(left_up)<-NA
 values(left_up)[[1]]<-1
 distance_LP <-raster::mask(distance(left_up),study_area)
 distance_LP@data@names<-"Distance_LP"
-
 
 GW_center<-data.frame(Latitude=c(6495000,6475000,6460000,6448000,6403000),Longitude=rep(402000,5),values=1)
 GW_center <- SpatialPoints(GW_center[, c(2:1)], proj4string = WGS84)
@@ -178,7 +176,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 ## load the data 
 set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
-
 
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
@@ -198,13 +195,10 @@ d <- pointDistance(a, lonlat=F)
 n1.d <- apply(d, 1, function(x) order(x, decreasing=F)[2])
 n2.d <- apply(d, 1, function(x) order(x, decreasing=F)[3])
 n3.d <- apply(d, 1, function(x) order(x, decreasing=F)[4])
-n4.d <- apply(d, 1, function(x) order(x, decreasing=F)[5])
-n5.d <- apply(d, 1, function(x) order(x, decreasing=F)[6])
 
 newdata <- cbind(all_points2, all_points2[n1.d,"DON"],all_points2[n2.d,"DON"],all_points2[n3.d,"DON"],all_points2[n4.d,"DON"],all_points2[n5.d,"DON"])
 newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
-newdata$variance<-(newdata$DON-newdata$DON_m3)^2
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
 newdata[newdata$dev<=1,"type"]=1
@@ -253,7 +247,7 @@ for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
+  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)
   
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
@@ -343,10 +337,6 @@ for (tt in c(1:30)){
     
     }
   
-  ## build the model for map2
-  #names(M2_train)<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
-  #names(M2_test)<-c("Soil",  "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
-  
   M2_train$date_<-(M2_train$date_)^2
   M2_test$date_<-(M2_test$date_)^2
   
@@ -356,12 +346,7 @@ for (tt in c(1:30)){
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-  #WP2Train$Latitude<--WP2Train$Latitude
-  #M2_test$Latitude<--M2_test$Latitude
-  
-  #WP2Train$Distance<-log10(WP2Train$Distance+0.01)
-  #WP2Test$Distance<-log10(WP2Test$Distance+0.01)
-  
+
   for(i in c(5:8,10,12)){
     
     min_train<-min(M2_train[,i])
@@ -405,7 +390,6 @@ for (tt in c(1:30)){
   
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
-  # Add X and Y to training 
   # Compute the sample variogram; note that the f.1 trend model is one of the
   var.smpl_res <- variogram(f.res, training_df)
   plot(var.smpl_res)
@@ -416,10 +400,8 @@ for (tt in c(1:30)){
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
   #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
-
-  ## map4, kriging first and then rf
+  
   # kriging for DOC
-
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
   training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
