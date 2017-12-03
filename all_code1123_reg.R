@@ -219,14 +219,14 @@ seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 200L)
+ctrl = makeTuneControlIrace(maxExperiments = 500L)
 rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(50,200,20)),
+  makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 2, upper =6)
+  makeIntegerParam("mtry", lower = 4, upper =8)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -294,8 +294,8 @@ for (tt in c(1:30)){
   M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
   
   ## M2, using RF to predict the DON
-  a=500
-  b=150
+  a=700
+  b=1400
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -315,8 +315,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Collect_Month","date_","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Collect_Month","date_","s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","Collect_Month","date_","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","Collect_Month",'date_',"s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -353,11 +353,11 @@ for (tt in c(1:30)){
   WP2Train$date_<-(WP2Train$date_)^2
   WP2Test$date_<-(WP2Test$date_)^2
   
-  WP2Train$Distance_GWC<-(WP2Train$Distance_GWC)^2
-  WP2Test$Distance_GWC<-(WP2Test$Distance_GWC)^2
+  WP2Train$DON_m3<-log10(WP2Train$DON_m3)
+  WP2Test$DON_m3<-log10(WP2Test$DON_m3)
   
-  #WP2Train$GW_depth<-(WP2Train$GW_depth)^2
-  #WP2Test$GW_depth<-(WP2Test$GW_depth)^2
+  WP2Train$DON<-log10(WP2Train$DON)
+  WP2Test$DON<-log10(WP2Test$DON)
   
   #WP2Train$Latitude<--WP2Train$Latitude
   #M2_test$Latitude<--M2_test$Latitude
@@ -365,7 +365,7 @@ for (tt in c(1:30)){
   #WP2Train$Distance<-log10(WP2Train$Distance+0.01)
   #WP2Test$Distance<-log10(WP2Test$Distance+0.01)
   
-  for(i in c(5:8,11:13)){
+  for(i in c(5:8,10,12)){
     
     min_train<-min(WP2Train[,i])
     max_train<-max(WP2Train[,i])
@@ -382,13 +382,19 @@ for (tt in c(1:30)){
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(7,12,13)]
-  WP2Test<-WP2Test[,-c(7,12,13)]
+  WP2Train<-WP2Train[,-c(6,7,13,14)]
+  WP2Test<-WP2Test[,-c(6,7,13,14)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
   map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
+  
+  map2_predict$data$truth<-10^map2_predict$data$truth
+  map2_predict$data$response<-10^map2_predict$data$response
+  map2_train$data$truth<-10^map2_train$data$truth
+  map2_train$data$response<-10^map2_train$data$response
+  
   
   M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
   M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
@@ -459,8 +465,8 @@ for (tt in c(1:30)){
   landscape_train_withKN <- cbind(capture_zone_DON(training_df),capture_zone_DOC(training_df))
   landscape_test_withKN <- cbind(capture_zone_DON(testing_df),capture_zone_DOC(testing_df))
   
-  M4_train_withKN <- cbind(M2_train,as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(M2_test,as.data.frame(landscape_test_withKN))
+  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   ## create the training and testing sets 
@@ -471,14 +477,14 @@ for (tt in c(1:30)){
   #M4_train_withKN <- reclass3(M4_train_withKN,0.5,1.0)
   #M4_test_withKN <- reclass3(M4_test_withKN,0.5,1.0)
   
-  M4_train_withKN<-M4_train_withKN[,-c(7,12,13)]
-  M4_test_withKN<-M4_test_withKN[,-c(7,12,13)]
+  #M4_train_withKN<-M4_train_withKN[,-c(7,12,13)]
+  #M4_test_withKN<-M4_test_withKN[,-c(7,12,13)]
   
-  M4_train_withKN$date_<-(M4_train_withKN$date_)^2
-  M4_test_withKN$date_<-(M4_test_withKN$date_)^2
+  #M4_train_withKN$date_<-(M4_train_withKN$date_)^2
+ # M4_test_withKN$date_<-(M4_test_withKN$date_)^2
   
-  M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
-  M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
+ # M4_train_withKN$Distance_GWC<-(M4_train_withKN$Distance_GWC)^2
+  #M4_test_withKN$Distance_GWC<-(M4_test_withKN$Distance_GWC)^2
   
  # M4_train_withKN$GW_depth<-(M4_train_withKN$GW_depth)^2
  # M4_test_withKN$GW_depth<-(M4_test_withKN$GW_depth)^2
@@ -489,23 +495,14 @@ for (tt in c(1:30)){
   #M4_train_withKN$Distance_LP<-log10(M4_train_withKN$Distance_LP+0.01)
   #M4_test_withKN$Distance_LP<-log10(M4_test_withKN$Distance_LP+0.01)
   
-  M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
-  M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-  
-  for(i in c(5:7,10:13)){
-    min_train<-min(M4_train_withKN[,i])
-    max_train<-max(M4_train_withKN[,i])
-    
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-min_train)/(max_train-min_train)
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-min_train)/(max_train-min_train)
-    
-    sd_train<-sd(M4_train_withKN[,i])
-    mean_train<-mean(M4_train_withKN[,i])
-    
-    M4_train_withKN[,i]<-(M4_train_withKN[,i]-mean_train)/sd_train
-    M4_test_withKN[,i]<-(M4_test_withKN[,i]-mean_train)/sd_train
-    
-  }
+  #M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC_k
+  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
+  M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
+  M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
+  M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
+  M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
+  M4_train_withKN<-M4_train_withKN[,-11]
+  M4_test_withKN<-M4_test_withKN[,-11]
   
   set.seed(seeds)
   
@@ -515,6 +512,11 @@ for (tt in c(1:30)){
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
   # 
+  map4_predict$data$truth<-10^map4_predict$data$truth
+  map4_predict$data$response<-10^map4_predict$data$response
+  map4_train$data$truth<-10^map4_train$data$truth
+  map4_train$data$response<-10^map4_train$data$response
+  
   M4_rmse<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_r2<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   M4_rmse_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
