@@ -504,7 +504,7 @@ model_build <- function(dataset, n_target) {
     geom_raster(aes(fill = DON)) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_continuous(low = "lightyellow", high = "red2",limits=c(0,4))
+    scale_fill_continuous(low = "lightgrey", high = "red2",limits=c(0,4))
   
   a=700
   b=1400
@@ -662,7 +662,7 @@ model_build <- function(dataset, n_target) {
     geom_raster(aes(fill = DON)) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_continuous(low = "lightyellow", high = "red2",limits=c(0,4))
+    scale_fill_continuous(low = "lightgrey", high = "red2",limits=c(0,4))
   
   #convert the raster to points for plotting
   #colnames(map2_df) <- c("Longitude", "Latitude", "DO
@@ -766,6 +766,33 @@ model_build <- function(dataset, n_target) {
     scale_fill_continuous(low = "lightgrey", high = "red2",limits=c(0,4))
   
   
-
+  
+  
+  GW_depth_df <- raster::mask(landscapes[[5]],study_area_withW) %>% 
+                  rasterToPoints(.) %>% data.frame(.)
+  #Make the points a dataframe for ggplot
+  #Make appropriate column headings
+  colnames(GW_depth_df) <- c("Longitude", "Latitude", "GW_depth")
+  
+  #Now make the map
+  ggplot(data = GW_depth_df, aes(y = Latitude, x = Longitude)) +
+    geom_raster(aes(fill = GW_depth)) + theme_bw() +
+    coord_equal() +
+    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+    scale_fill_continuous(low = "yellow", high = "red2")
+  
+  
+  Distance_df <- raster::mask(landscapes[[6]],study_area_withW) %>% 
+    rasterToPoints(.) %>% data.frame(.)
+  #Make the points a dataframe for ggplot
+  #Make appropriate column headings
+  colnames(Distance_df) <- c("Longitude", "Latitude", "distance")
+  
+  #Now make the map
+  ggplot(data = Distance_df, aes(y = Latitude, x = Longitude)) +
+    geom_raster(aes(fill = distance)) + theme_bw() +
+    coord_equal() +
+    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+    scale_fill_continuous(low = "lightgrey", high = "black",limits=c(0,50000))
 
 
