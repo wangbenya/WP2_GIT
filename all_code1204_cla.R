@@ -474,8 +474,9 @@ for (tt in c(1:30)){
     
        }
 
-  M4_ACC<-postResample(map4_predict_cla$modified_DON,map4_predict_cla$truth)[1]
-  M4_kappa<-postResample(map4_predict_cla$modified_DON,map4_predict_cla$truth)[2]
+  M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
+  M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
+  
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
