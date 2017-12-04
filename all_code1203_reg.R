@@ -247,8 +247,8 @@ for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)
-  
+
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -347,7 +347,7 @@ for (tt in c(1:30)){
   M2_test$DON<-log10(M2_test$DON)
   
 
-  for(i in c(5:8,10,12)){
+  for(i in c(5:8,10,12,13,14)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -364,8 +364,8 @@ for (tt in c(1:30)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(6,7)]
-  WP2Test<-M2_test[,-c(6,7)]
+  WP2Train<-M2_train[,-c(4,7,10)]
+  WP2Test<-M2_test[,-c(4,7,10)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
