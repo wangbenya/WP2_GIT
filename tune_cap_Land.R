@@ -155,13 +155,11 @@ water <- raster::rasterize(water, depth_k)
 water_distance <- raster::mask(distance(water),study_area)
 water_distance@data@names<-"Distance_to_water"
 
-
 left_up<-water 
 values(left_up)<-NA
 values(left_up)[[1]]<-1
 distance_LP <-raster::mask(distance(left_up),study_area)
 distance_LP@data@names<-"Distance_LP"
-
 
 GW_center<-data.frame(Latitude=c(6495000,6475000,6460000,6448000,6403000),Longitude=rep(402000,5),values=1)
 GW_center <- SpatialPoints(GW_center[, c(2:1)], proj4string = WGS84)
@@ -178,7 +176,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 ## load the data 
 set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
-
 
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
@@ -198,13 +195,10 @@ d <- pointDistance(a, lonlat=F)
 n1.d <- apply(d, 1, function(x) order(x, decreasing=F)[2])
 n2.d <- apply(d, 1, function(x) order(x, decreasing=F)[3])
 n3.d <- apply(d, 1, function(x) order(x, decreasing=F)[4])
-n4.d <- apply(d, 1, function(x) order(x, decreasing=F)[5])
-n5.d <- apply(d, 1, function(x) order(x, decreasing=F)[6])
 
-newdata <- cbind(all_points2, all_points2[n1.d,"DON"],all_points2[n2.d,"DON"],all_points2[n3.d,"DON"],all_points2[n4.d,"DON"],all_points2[n5.d,"DON"])
+newdata <- cbind(all_points2, all_points2[n1.d,"DON"],all_points2[n2.d,"DON"],all_points2[n3.d,"DON"])
 newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
-newdata$variance<-(newdata$DON-newdata$DON_m3)^2
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
 newdata[newdata$dev<=1,"type"]=1
@@ -219,15 +213,15 @@ seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 200L)
+ctrl = makeTuneControlIrace(maxExperiments = 500L)
 rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(50,200,20)),
+  makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 2, upper =6)
-  #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
+  makeIntegerParam("mtry", lower = 4, upper =8)
+#  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
 model_build <- function(dataset, n_target) {
@@ -249,12 +243,12 @@ model_build <- function(dataset, n_target) {
 
 all_results<-data.frame()
 
-for (tt in c(1)){
+  tt=1
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)
-  
+
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -272,30 +266,10 @@ for (tt in c(1)){
   testing_df<-add_S1S2(testing_df)
   
   # Compute the sample variogram; note that the f.1 trend model is one of the
-  var.smpl1 <- variogram(f.1, training_df)
-  plot(var.smpl1)
-  # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph")))
-  
-  plot(var.smpl1,dat.fit1)
-  # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
-  values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
-  dat.krg_DON<-kriging_DON_m1
-  
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-  
-  M1_rmse<-postResample(map1_predict[,2],map1_predict[,1])[1]
-  M1_r2<-postResample(map1_predict[,2],map1_predict[,1])[2]
-  
-  map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
-  
-  M1_rmse_train<-postResample(map1_train[,2],map1_train[,1])[1]
-  M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
-  
   ## M2, using RF to predict the DON
-  for (a in seq(100,1500,100)){
-    for (b in seq(100,3000,100)){
+  for (a in seq(50,1000,100)){
+    for (b in seq(50,1500,100)){
+  
   capture_zone_land<-function(df){
     num<-nrow(df)
     landscape_data<-data.frame()
@@ -315,8 +289,8 @@ for (tt in c(1)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","Collect_Month","date_","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","Collect_Month","date_","s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","Collect_Month","date_","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","Collect_Month",'date_',"s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -337,76 +311,62 @@ for (tt in c(1)){
     M2_train[,ii]<-factor(M2_train[,ii],levels = unique(values(landscapes[[ii]]))[-1])
     M2_test[,ii]<-factor(M2_test[,ii],levels=unique(values(landscapes[[ii]]))[-1])
     M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
-    
+     
     M2_train[,ii]<-droplevels(M2_train[,ii])
     M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
     
-  }
+    }
   
-  ## build the model for map2
-  #names(M2_train)<-c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
-  #names(M2_test)<-c("Soil",  "Veg", "Landuse","Catchment", "GW_depth", "Distance", "DON","s1","s2")
+  M2_train$date_<-(M2_train$date_)^2
+  M2_test$date_<-(M2_test$date_)^2
   
-  WP2Train<-M2_train
-  WP2Test<-M2_test
+  M2_train$DON_m3<-log10(M2_train$DON_m3)
+  M2_test$DON_m3<-log10(M2_test$DON_m3)
   
-  WP2Train$date_<-(WP2Train$date_)^2
-  WP2Test$date_<-(WP2Test$date_)^2
+  M2_train$DON<-log10(M2_train$DON)
+  M2_test$DON<-log10(M2_test$DON)
   
-  WP2Train$Distance_GWC<-(WP2Train$Distance_GWC)^2
-  WP2Test$Distance_GWC<-(WP2Test$Distance_GWC)^2
-  
-  WP2Train$GW_depth<-(WP2Train$GW_depth)^2
-  WP2Test$GW_depth<-(WP2Test$GW_depth)^2
-  
-  WP2Test$Distance<-(WP2Test$Distance)^2
-  WP2Test$Distance<-(WP2Test$Distance)^2
-  
-  #WP2Train$Latitude<--WP2Train$Latitude
-  #M2_test$Latitude<--M2_test$Latitude
-  
-  #WP2Train$Distance<-log10(WP2Train$Distance+0.01)
-  #WP2Test$Distance<-log10(WP2Test$Distance+0.01)
-  
-  for(i in c(5:8,11:13)){
+
+  for(i in c(5:8,10,12,13,14)){
     
-    min_train<-min(WP2Train[,i])
-    max_train<-max(WP2Train[,i])
+    min_train<-min(M2_train[,i])
+    max_train<-max(M2_train[,i])
     
-    WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
-    WP2Test[,i]<-(WP2Test[,i]-min_train)/(max_train-min_train)
+    M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
+    M2_test[,i]<-(M2_test[,i]-min_train)/(max_train-min_train)
     
-    sd_train<-sd(WP2Train[,i])
-    mean_train<-mean(WP2Train[,i])
+    sd_train<-sd(M2_train[,i])
+    mean_train<-mean(M2_train[,i])
     
-    WP2Train[,i]<-(WP2Train[,i]-mean_train)/sd_train
-    WP2Test[,i]<-(WP2Test[,i]-mean_train)/sd_train
+    M2_train[,i]<-(M2_train[,i]-mean_train)/sd_train
+    M2_test[,i]<-(M2_test[,i]-mean_train)/sd_train
     
   }
   
   set.seed(seeds)
-  WP2Train<-WP2Train[,-c(7,12,13)]
-  WP2Test<-WP2Test[,-c(7,12,13)]
+  WP2Train<-M2_train[,-c(4,7,10)]
+  WP2Test<-M2_test[,-c(4,7,10)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
   map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
   
+  map2_predict$data$truth<-10^map2_predict$data$truth
+  map2_predict$data$response<-10^map2_predict$data$response
+  map2_train$data$truth<-10^map2_train$data$truth
+  map2_train$data$response<-10^map2_train$data$response
+  
   M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
   M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
   
-  M2_rmse_train<-postResample(map2_train$data$response, map2_train$data$truth)[1]
-  M2_r2_train<-postResample(map2_train$data$response, map2_train$data$truth)[2]
+  sing_acc<-data.frame(a,b,M2_rmse,M2_r2)
   
-# create the training and testing sets
-  ## map3 predict accuracy
-  sing_acc<-data.frame(a,b,M2_r2,M2_r2_train)
   all_results<-rbind(all_results,sing_acc)
-  
   print(all_results)
-}
-}
-}
+  }
+  }
+
+
 
 
