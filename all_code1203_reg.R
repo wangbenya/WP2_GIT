@@ -201,8 +201,8 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=1,"type"]=1
-newdata[newdata$dev>1,"type"]=0
+newdata[newdata$dev<=5,"type"]=1
+newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 
@@ -240,6 +240,8 @@ model_build <- function(dataset, n_target) {
   rf <- mlr::train(lrn_rf, WP3_target)
   return(rf)
 }
+
+all_points[all_points$DON==0.25,"DON"]=all_points[all_points$DON==0.25,"DON"]+1
 
 all_results<-data.frame()
 
