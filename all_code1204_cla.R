@@ -237,17 +237,16 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=1.5,"type"]=1
-newdata[newdata$dev>1.5,"type"]=0
+newdata[newdata$dev<=5,"type"]=1
+newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
-
 all_points<-subset(all_points,all_points$type==1)
 
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("regr.randomForest")
+reg_rf = makeLearner("classif.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
 rdesc = makeResampleDesc("CV", iters = 5)
@@ -263,12 +262,12 @@ para_rf = makeParamSet(
 model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
-  WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
+  WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
   ## cross validation
   ## 10-fold cross-validation
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                           show.info = FALSE,measures=rsq)
+                           show.info = FALSE,measures=accuracy)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
   
   ## train the final model 
@@ -277,8 +276,8 @@ model_build <- function(dataset, n_target) {
   return(rf)
 }
 
-    a1=1
-    a2=2
+    a1=1.5
+    a2=3
     print(a1)
     print(a2)
 all_results<-data.frame()
