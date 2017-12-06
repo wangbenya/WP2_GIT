@@ -442,7 +442,6 @@ for (tt in c(1:30)){
   M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
   
-  
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
@@ -453,7 +452,7 @@ for (tt in c(1:30)){
   var.smpl_DOC <- variogram(f.DOC, training_DOC)
   plot(var.smpl_DOC)
   
-  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph","Exp")))
+  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph")))
   plot(var.smpl_DOC,dat.fit_DOC)
   # Perform the krige interpolation (note the use of the variogram model
   dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
@@ -520,11 +519,10 @@ for (tt in c(1:30)){
   plot(var.smpl_res,dat.fit_res)
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
-  #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
   
+  #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
   map4_predict <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
   map4_predict$modified_DON<-map4_predict$response+map4_predict$predicted_DON_res
-  
   
   map4_predict_cla <- data.frame(observed_DON=map4_predict$truth,predicted_DON=map4_predict$modified_DON)
   
