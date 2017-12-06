@@ -427,7 +427,7 @@ n3.d <- apply(d, 1, function(x) order(x, decreasing=F)[4])
 newdata <- cbind(all_points2, all_points2[n1.d,"DON"],all_points2[n2.d,"DON"],all_points2[n3.d,"DON"])
 newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
-newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
+newdata$dev2<-sqrt((newdata$DON-newdata$DON_m3)^2)/newdata$DON_m3
 
 newdata[newdata$dev<=1,"type"]=1
 newdata[newdata$dev>1,"type"]=0
@@ -779,7 +779,7 @@ model_build <- function(dataset, n_target) {
     geom_raster(aes(fill = GW_depth)) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_continuous(low = "yellow", high = "red2")
+    scale_fill_continuous(low = "yellow", high = "red")
   
   
   Distance_df <- raster::mask(landscapes[[6]],study_area_withW) %>% 
@@ -793,6 +793,18 @@ model_build <- function(dataset, n_target) {
     geom_raster(aes(fill = distance)) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
-    scale_fill_continuous(low = "lightgrey", high = "black",limits=c(0,50000))
-
-
+    scale_fill_gradientn(colours = terrain.colors(5),limits=c(0,60000))
+  
+  
+  Distance_gwc_df <- raster::mask(landscapes[[7]],study_area_withW) %>% 
+    rasterToPoints(.) %>% data.frame(.)
+  #Make the points a dataframe for ggplot
+  #Make appropriate column headings
+  colnames(Distance_gwc_df) <- c("Longitude", "Latitude", "distance_gwc")
+  
+  #Now make the map
+  ggplot(data = Distance_gwc_df, aes(y = Latitude, x = Longitude)) +
+    geom_raster(aes(fill = distance_gwc)) + theme_bw() +
+    coord_equal() +
+    theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+    scale_fill_gradientn(colours = terrain.colors(5),limits=c(0,60000))

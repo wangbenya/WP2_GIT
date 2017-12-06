@@ -190,6 +190,29 @@ ggplot(data=error_surface,aes(x=train_surface$a,y=train_surface$b))+
 
 
 
+Res_df <- raster::mask(kriging_DON_res,study_area_withW) %>% 
+  rasterToPoints(.) %>% data.frame(.)
+#Make the points a dataframe for ggplot
+#Make appropriate column headings
+colnames(Res_df) <- c("Longitude", "Latitude", "residual")
+
+#Now make the map
+ggplot(data = Res_df, aes(y = Latitude, x = Longitude)) +
+  geom_raster(aes(fill = residual)) + theme_bw() +
+  coord_equal() +
+  theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
+  scale_fill_gradientn(colours = terrain.colors(10))+
+  geom_point(data=data.frame(training_df),aes(x=training_df$s1,y=training_df$s2),size=2,shape=1)
 
 
+all_results<-read.csv("D:/Program/work package 2/WP2_1128/WP2/data/all_results.csv",header=T)
+
+all_results<-melt(all_results)
+
+all_results_r2<-subset(all_results,all_results$variable %in% c('M1_r2','M2_r2','M4_r2'))
+all_results_rmse<-subset(all_results,all_results$variable %in% c('M1_rmse','M2_rmse','M4_rmse'))
+
+ggplot(data=all_results_r2,aes(all_results_r2$variable,all_results_r2$value))+geom_boxplot()+theme_bw()
+
+ggplot(data=all_results_rmse,aes(all_results_rmse$variable,all_results_rmse$value))+geom_boxplot()+theme_bw()
 
