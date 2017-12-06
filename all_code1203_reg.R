@@ -242,7 +242,7 @@ model_build <- function(dataset, n_target) {
 }
 
 all_points[all_points$DON==0.25,"DON"]=all_points[all_points$DON==0.25,"DON"]+1
-
+all_points<-subset(all_points,all_points$DON>0.25)
 all_results<-data.frame()
 
 for (tt in c(1:30)){

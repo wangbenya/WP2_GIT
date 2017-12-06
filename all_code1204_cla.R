@@ -223,6 +223,7 @@ NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 
+#all_points[all_points$DON==0.25,"DON"]=all_points[all_points$DON==0.25,"DON"]+0.25
 #Make a distance matrix
 all_points2<-read_pointDataframes(all_points)
 all_points2<-add_S1S2(all_points2)
@@ -246,7 +247,7 @@ all_points<-subset(all_points,all_points$type==1)
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
-reg_rf = makeLearner("classif.randomForest")
+reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
 rdesc = makeResampleDesc("CV", iters = 5)
@@ -262,12 +263,12 @@ para_rf = makeParamSet(
 model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
-  WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
+  WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
   ## cross validation
   ## 10-fold cross-validation
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                           show.info = FALSE,measures=accuracy)
+                           show.info = FALSE)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
   
   ## train the final model 
@@ -276,13 +277,14 @@ model_build <- function(dataset, n_target) {
   return(rf)
 }
 
-    a1=1.5
-    a2=3
+     a1=1.0
+     a2=2.5
     print(a1)
     print(a2)
 all_results<-data.frame()
 
 for (tt in c(1:30)){
+
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -364,8 +366,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","Collect_Month","date_","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","Collect_Month",'date_',"s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -392,9 +394,6 @@ for (tt in c(1:30)){
     
     }
   
-  M2_train$date_<-(M2_train$date_)^2
-  M2_test$date_<-(M2_test$date_)^2
-  
   M2_train$DON_m3<-log10(M2_train$DON_m3)
   M2_test$DON_m3<-log10(M2_test$DON_m3)
   
@@ -402,7 +401,7 @@ for (tt in c(1:30)){
   M2_test$DON<-log10(M2_test$DON)
   
 
-  for(i in c(5:8,10,12,13,14)){
+  for(i in c(5:8,11,12)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -419,8 +418,8 @@ for (tt in c(1:30)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7,10)]
-  WP2Test<-M2_test[,-c(4,7,10)]
+  WP2Train<-M2_train[,-c(4,7)]
+  WP2Test<-M2_test[,-c(4,7)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -444,7 +443,7 @@ for (tt in c(1:30)){
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
   
   ## kriging reditusl 
-  training_df$DON_res<-map2_train$data$truth-map2_train$data$response
+  training_df$DON_res<-10^(map2_train$data$truth)-10^(map2_train$data$response)
   
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
@@ -476,7 +475,7 @@ for (tt in c(1:30)){
   M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
   M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa,n1=table(map4_predict_cla[,2][1]))
   
   all_results<-rbind(all_results,sing_acc)
   
