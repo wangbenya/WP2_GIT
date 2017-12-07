@@ -506,7 +506,7 @@ for (tt in c(1:30)){
   map4_train$data$response<-10^map4_train$data$response
   
   ## kriging reditusl 
-  training_df$DON_res<-10^(map4_train$data$truth)-10^(map4_train$data$response)
+  training_df$DON_res<-map4_train$data$truth-map4_train$data$response
   
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
@@ -521,10 +521,10 @@ for (tt in c(1:30)){
   kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
   
   #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
-  map4_predict <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
-  map4_predict$modified_DON<-map4_predict$response+map4_predict$predicted_DON_res
+  map4_predict_res <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+  map4_predict_res$modified_DON<-map4_predict_res$response+map4_predict_res$predicted_DON_res
   
-  map4_predict_cla <- data.frame(observed_DON=map4_predict$truth,predicted_DON=map4_predict$modified_DON)
+  map4_predict_cla <- data.frame(observed_DON=map4_predict_res$truth,predicted_DON=map4_predict_res$modified_DON)
   
       for (t in c(1,2)){
     map4_predict_cla[, t][map4_predict_cla[, t] <=a1] <- "Low"
