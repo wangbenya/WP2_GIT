@@ -366,8 +366,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -394,14 +394,14 @@ for (tt in c(1:30)){
     
     }
   
-  M2_train$DON_m3<-log10(M2_train$DON_m3)
-  M2_test$DON_m3<-log10(M2_test$DON_m3)
+#  M2_train$DON_m3<-log10(M2_train$DON_m3)
+ # M2_test$DON_m3<-log10(M2_test$DON_m3)
   
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
 
-  for(i in c(5:8,11,12)){
+  for(i in c(5:8)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
