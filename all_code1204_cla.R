@@ -84,22 +84,6 @@ reclass <- function(df, i, j) {
 }
 
 
-reclass2 <- function(df) {
-  df[, "DON"][df[, "DON"] == 1] <- "Low"
-  df[, "DON"][df[, "DON"] == 2] <- "Medium"
-  df[, "DON"][(df[, "DON"] != "Low") & (df[, "DON"] != "Medium")] <- "High"
-  df[, "DON"] <- factor(df[, "DON"], levels = c("Low", "Medium", "High"))
-  return(df)
-}
-
-reclass3 <- function(df, i, j) {
-  df[, "DON_k"][df[, "DON_k"] <= i] <- "Low"
-  df[, "DON_k"][df[, "DON_k"] < j] <- "Medium"
-  df[, "DON_k"][(df[, "DON_k"] != "Low") & (df[, "DON_k"] != "Medium")] <- "High"
-  df[, "DON_k"] <- factor(df[, "DON_k"], levels = c("Low", "Medium", "High"))
-  return(df)
-}
-
 reclass4<-function(df,i,j){
   for (t in c(1,2)){
     df[, t][df[, t] <=i] <- "Low"
@@ -317,31 +301,16 @@ for (tt in c(1:30)){
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
   dat.krg_DON<-kriging_DON_m1
   
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-  
-      for (t in c(1,2)){
-    map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
-    map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
-    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-  
+  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))  
+  map1_predict<-reclass4(map1_predict,a1,a2)
+
   M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
   
   map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
   
-      for (t in c(1,2)){
-    map1_train[, t][map1_train[, t] <=a1] <- "Low"
-    map1_train[, t][map1_train[, t] < a2] <- "Medium"
-    map1_train[, t][(map1_train[, t] != "Low") & (map1_train[, t] != "Medium")] <- "High"
-    map1_train[, t] <- factor(map1_train[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-
+  map1_train<-reclass4(map1_train,a1,a2)
   M1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
-
 
   ## M2, using RF to predict the DON
   a=700
@@ -390,16 +359,11 @@ for (tt in c(1:30)){
      
     M2_train[,ii]<-droplevels(M2_train[,ii])
     M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
-    
     }
-  
-  #M2_train$DON_m3<-log10(M2_train$DON_m3)
-  #M2_test$DON_m3<-log10(M2_test$DON_m3)
   
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-
   for(i in c(5:8,10,11)){
     
     min_train<-min(M2_train[,i])
@@ -430,14 +394,8 @@ for (tt in c(1:30)){
   
   map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
   
-      for (t in c(1,2)){
-    map2_predict_cla[, t][map2_predict_cla[, t] <=a1] <- "Low"
-    map2_predict_cla[, t][map2_predict_cla[, t] < a2] <- "Medium"
-    map2_predict_cla[, t][(map2_predict_cla[, t] != "Low") & (map2_predict_cla[, t] != "Medium")] <- "High"
-    map2_predict_cla[, t] <- factor(map2_predict_cla[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-  
+  map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
+
   M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
   
@@ -524,13 +482,7 @@ for (tt in c(1:30)){
   map4_predict_res$modified_DON<-map4_predict_res$response+map4_predict_res$predicted_DON_res
   
   map4_predict_cla <- data.frame(observed_DON=map4_predict_res$truth,predicted_DON=map4_predict_res$modified_DON)
-  
-      for (t in c(1,2)){
-    map4_predict_cla[, t][map4_predict_cla[, t] <=a1] <- "Low"
-    map4_predict_cla[, t][map4_predict_cla[, t] < a2] <- "Medium"
-    map4_predict_cla[, t][(map4_predict_cla[, t] != "Low") & (map4_predict_cla[, t] != "Medium")] <- "High"
-    map4_predict_cla[, t] <- factor(map4_predict_cla[, t], levels = c("Low", "Medium", "High"))
-       }
+  map4_predict_cla<-reclass4(map4_predict_cla,a1,a2)
 
   M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
   M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
