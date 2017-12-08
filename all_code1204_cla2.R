@@ -237,7 +237,7 @@ rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(50,300,20)),
+  makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 10, upper = 15),
   makeIntegerParam("mtry", lower = 4, upper =6)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
@@ -355,8 +355,8 @@ for (tt in c(1:8)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7)]
-  WP2Test<-M2_test[,-c(4,7)]
+  WP2Train<-M2_train[,-c(4,6,7)]
+  WP2Test<-M2_test[,-c(4,6,7)]
   
  #rf_DON_m2 <- model_build(WP2Train,"DON")
   # kriging for DOC
