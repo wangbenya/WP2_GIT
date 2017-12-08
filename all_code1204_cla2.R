@@ -84,22 +84,6 @@ reclass <- function(df, i, j) {
 }
 
 
-reclass2 <- function(df) {
-  df[, "DON"][df[, "DON"] == 1] <- "Low"
-  df[, "DON"][df[, "DON"] == 2] <- "Medium"
-  df[, "DON"][(df[, "DON"] != "Low") & (df[, "DON"] != "Medium")] <- "High"
-  df[, "DON"] <- factor(df[, "DON"], levels = c("Low", "Medium", "High"))
-  return(df)
-}
-
-reclass3 <- function(df, i, j) {
-  df[, "DON_k"][df[, "DON_k"] <= i] <- "Low"
-  df[, "DON_k"][df[, "DON_k"] < j] <- "Medium"
-  df[, "DON_k"][(df[, "DON_k"] != "Low") & (df[, "DON_k"] != "Medium")] <- "High"
-  df[, "DON_k"] <- factor(df[, "DON_k"], levels = c("Low", "Medium", "High"))
-  return(df)
-}
-
 reclass4<-function(df,i,j){
   for (t in c(1,2)){
     df[, t][df[, t] <=i] <- "Low"
@@ -223,7 +207,6 @@ NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 
-#all_points[all_points$DON==0.25,"DON"]=all_points[all_points$DON==0.25,"DON"]+0.25
 #Make a distance matrix
 all_points2<-read_pointDataframes(all_points)
 all_points2<-add_S1S2(all_points2)
@@ -238,8 +221,8 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=5,"type"]=1
-newdata[newdata$dev>5,"type"]=0
+newdata[newdata$dev<=6,"type"]=1
+newdata[newdata$dev>6,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
@@ -255,7 +238,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 10, upper = 15),
+  makeIntegerParam("nodesize", lower = 15, upper = 20),
   makeIntegerParam("mtry", lower = 4, upper =8)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -264,13 +247,10 @@ model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-  ## cross validation
-  ## 10-fold cross-validation
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                            show.info = FALSE)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
-  
   ## train the final model 
   #set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
@@ -283,7 +263,7 @@ model_build <- function(dataset, n_target) {
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:30)){
+for (tt in c(1:8)){
 
   print(tt)
   seeds<-seed.list[tt]
@@ -306,44 +286,6 @@ for (tt in c(1:30)){
   training_df<-add_S1S2(training_df)
   testing_df<-add_S1S2(testing_df)
   
-  # Compute the sample variogram; note that the f.1 trend model is one of the
-  var.smpl1 <- variogram(f.1, training_df)
-  plot(var.smpl1)
-  # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph")))
-  
-  plot(var.smpl1,dat.fit1)
-  # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
-  values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
-  dat.krg_DON<-kriging_DON_m1
-  
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-  
-      for (t in c(1,2)){
-    map1_predict[, t][map1_predict[, t] <=a1] <- "Low"
-    map1_predict[, t][map1_predict[, t] < a2] <- "Medium"
-    map1_predict[, t][(map1_predict[, t] != "Low") & (map1_predict[, t] != "Medium")] <- "High"
-    map1_predict[, t] <- factor(map1_predict[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-  
-  M1_ACC<-postResample(map1_predict[,2],map1_predict[,1])[1]
-  M1_kappa<-postResample(map1_predict[,2],map1_predict[,1])[2]
-  
-  map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
-  
-      for (t in c(1,2)){
-    map1_train[, t][map1_train[, t] <=a1] <- "Low"
-    map1_train[, t][map1_train[, t] < a2] <- "Medium"
-    map1_train[, t][(map1_train[, t] != "Low") & (map1_train[, t] != "Medium")] <- "High"
-    map1_train[, t] <- factor(map1_train[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-
-  M1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
-
-
   ## M2, using RF to predict the DON
   a=700
   b=1400
@@ -366,8 +308,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -391,17 +333,12 @@ for (tt in c(1:30)){
      
     M2_train[,ii]<-droplevels(M2_train[,ii])
     M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
-    
     }
-  
-  M2_train$DON_m3<-log10(M2_train$DON_m3)
-  M2_test$DON_m3<-log10(M2_test$DON_m3)
   
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-
-  for(i in c(5:8,11,12)){
+  for(i in c(5:8,10,11)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -421,27 +358,7 @@ for (tt in c(1:30)){
   WP2Train<-M2_train[,-c(4,7)]
   WP2Test<-M2_test[,-c(4,7)]
   
-  rf_DON_m2 <- model_build(WP2Train,"DON")
-  
-  map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
-  map2_train<-predict(rf_DON_m2,newdata=WP2Train)
-  
-  map2_predict$data$truth<-10^map2_predict$data$truth
-  map2_predict$data$response<-10^map2_predict$data$response
-  
-  map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
-  
-      for (t in c(1,2)){
-    map2_predict_cla[, t][map2_predict_cla[, t] <=a1] <- "Low"
-    map2_predict_cla[, t][map2_predict_cla[, t] < a2] <- "Medium"
-    map2_predict_cla[, t][(map2_predict_cla[, t] != "Low") & (map2_predict_cla[, t] != "Medium")] <- "High"
-    map2_predict_cla[, t] <- factor(map2_predict_cla[, t], levels = c("Low", "Medium", "High"))
-    
-       }
-  
-  M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
-  M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
-  
+ #rf_DON_m2 <- model_build(WP2Train,"DON")
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
@@ -506,23 +423,39 @@ for (tt in c(1:30)){
   map4_train$data$response<-10^map4_train$data$response
   
   ## kriging reditusl 
+  training_df$DON_res<-map4_train$data$truth-map4_train$data$response
+  ## map1, using kringing for DON interpolation
+  f.res <- as.formula(DON_res ~ 1)
   # Compute the sample variogram; note that the f.1 trend model is one of the
-  #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
-  map4_predict_cla <- data.frame(observed_DON=map4_predict$data$truth,predicted_DON=map4_predict$data$response)
+  var.smpl_res <- variogram(f.res, training_df)
+  plot(var.smpl_res)
+  # Compute the variogram model by passing the nugget, sill and range value
+  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph")))
   
-      for (t in c(1,2)){
-    map4_predict_cla[, t][map4_predict_cla[, t] <=a1] <- "Low"
-    map4_predict_cla[, t][map4_predict_cla[, t] < a2] <- "Medium"
-    map4_predict_cla[, t][(map4_predict_cla[, t] != "Low") & (map4_predict_cla[, t] != "Medium")] <- "High"
-    map4_predict_cla[, t] <- factor(map4_predict_cla[, t], levels = c("Low", "Medium", "High"))
-    
-       }
+  plot(var.smpl_res,dat.fit_res)
+  # Perform the krige interpolation (note the use of the variogram model
+  kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
+  
+  #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
+  map4_predict_res <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+  map4_predict_res$modified_DON<-map4_predict_res$response+map4_predict_res$predicted_DON_res
+  
+  map4_predict_cla <- data.frame(observed_DON=map4_predict_res$truth,predicted_DON=map4_predict_res$modified_DON)
+  map4_predict_cla<-reclass4(map4_predict_cla,a1,a2)
 
   M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
   M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  map4_train_res <- data.frame(map4_train$data,predicted_DON_res=raster::extract(kriging_DON_res, training_points))
+  map4_train_res$modified_DON<-map4_train_res$response+map4_train_res$predicted_DON_res
   
+  map4_train_cla <- data.frame(observed_DON=map4_train_cla$truth,predicted_DON=map4_train_cla$modified_DON)
+  map4_train_cla<-reclass4(map4_train_cla,a1,a2)
+
+  M4_ACC_train<-postResample(map4_train_cla[,2],map4_train_cla[,1])[1]
+  M4_kappa_train<-postResample(map4_train_cla[,2],map4_train_cla[,1])[2]
+  
+  sing_acc<-data.frame(M4_ACC,M4_kappa,M4_ACC_train,M4_kappa_train)
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
