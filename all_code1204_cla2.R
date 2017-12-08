@@ -237,7 +237,7 @@ rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
-  makeDiscreteParam("ntree", values=seq(400,800,50)),
+  makeDiscreteParam("ntree", values=seq(50,300,20)),
   makeIntegerParam("nodesize", lower = 10, upper = 15),
   makeIntegerParam("mtry", lower = 4, upper =6)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
