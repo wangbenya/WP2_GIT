@@ -270,7 +270,7 @@ model_build2 <- function(dataset, n_target) {
   rin = makeResampleInstance(rdesc, task = WP3_target)
     res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                              show.info = FALSE, measures = acc)
-  lrn_rf = setHyperPars(class_rf, par.vals = class_rf$x)
+  lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
   
   ## train the final model 
   #set.seed(719)
@@ -418,7 +418,7 @@ for (tt in c(1:30)){
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
   
   ## kriging reditusl 
-  training_df$DON_res<-map2_train$data$truth-map2_train$data$response
+  training_df$DON_res<-10^map2_train$data$truth-10^map2_train$data$response
   
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
@@ -496,9 +496,9 @@ for (tt in c(1:30)){
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
   # 
-  M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
-  M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
-  
+  M4_ACC<-postResample(map4_predict$data$response, map4_predict$data$truth)[1]
+  M4_kappa<-postResample(map4_predict$data$response, map4_predict$data$truth)[2]
+
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
