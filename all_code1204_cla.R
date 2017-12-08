@@ -239,7 +239,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 15, upper = 20),
-  makeIntegerParam("mtry", lower = 6, upper =10)
+  makeIntegerParam("mtry", lower = 4, upper =8)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -247,13 +247,10 @@ model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-  ## cross validation
-  ## 10-fold cross-validation
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                            show.info = FALSE)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
-  
   ## train the final model 
   #set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
@@ -261,7 +258,7 @@ model_build <- function(dataset, n_target) {
 }
 
      a1=1.0
-     a2=2.5
+     a2=2.0
     print(a1)
     print(a2)
 all_results<-data.frame()
@@ -272,7 +269,7 @@ for (tt in c(1:30)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -464,7 +461,6 @@ for (tt in c(1:30)){
   
   ## kriging reditusl 
   training_df$DON_res<-map4_train$data$truth-map4_train$data$response
-  
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
   # Compute the sample variogram; note that the f.1 trend model is one of the
