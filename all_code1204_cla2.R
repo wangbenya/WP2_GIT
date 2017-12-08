@@ -449,7 +449,7 @@ for (tt in c(1:8)){
   map4_train_res <- data.frame(map4_train$data,predicted_DON_res=raster::extract(kriging_DON_res, training_points))
   map4_train_res$modified_DON<-map4_train_res$response+map4_train_res$predicted_DON_res
   
-  map4_train_cla <- data.frame(observed_DON=map4_train_cla$truth,predicted_DON=map4_train_cla$modified_DON)
+  map4_train_cla <- data.frame(observed_DON=map4_train_res$truth,predicted_DON=map4_train_res$modified_DON)
   map4_train_cla<-reclass4(map4_train_cla,a1,a2)
 
   M4_ACC_train<-postResample(map4_train_cla[,2],map4_train_cla[,1])[1]
