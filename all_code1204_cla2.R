@@ -233,7 +233,7 @@ set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
-rdesc = makeResampleDesc("CV", iters = 5)
+rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
