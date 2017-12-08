@@ -258,12 +258,12 @@ model_build <- function(dataset, n_target) {
 }
 
      a1=1.0
-     a2=2.0
+     a2=2.5
     print(a1)
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:30)){
+for (tt in c(1:50)){
 
   print(tt)
   seeds<-seed.list[tt]
