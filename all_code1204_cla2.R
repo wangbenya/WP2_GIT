@@ -360,64 +360,12 @@ for (tt in c(1:10)){
   WP2Train<-M2_train[,-c(4,7)]
   WP2Test<-M2_test[,-c(4,7)]
   
- #rf_DON_m2 <- model_build(WP2Train,"DON")
-  # kriging for DOC
-  f.DOC <- as.formula(log10(DOC) ~ 1)
-  
-  training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
-    subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
-  
-  training_DOC<-add_S1S2(training_DOC)
-  var.smpl_DOC <- variogram(f.DOC, training_DOC)
-  plot(var.smpl_DOC)
-  
-  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph")))
-  plot(var.smpl_DOC,dat.fit_DOC)
-  # Perform the krige interpolation (note the use of the variogram model
-  dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
-  values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
-  
-  ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
-  names(kriging_nutrietn_DOC) <- c("DOC_k")
-  
-  ## extract the data from landscapes_withN
-  c=500
-  d=600
-  capture_zone_DOC<-function(df){
-    num<-nrow(df)
-    landscape_data<-data.frame()
-    for (r in seq(1,num)){
-      p1_long<-df@coords[r,1]
-      p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+c,p1_lat+d),c(p1_long+2*c,p1_lat+d),
-                           c(p1_long+2*c,p1_lat-d),c(p1_long+c,p1_lat-d),c(p1_long,p1_lat)))  
-      projection(pg)<- WGS84
-      p1_landscape<-raster::extract(kriging_nutrietn_DOC,pg)
-      land_data<-data.frame(DOC_k=mean(p1_landscape[[1]][,1],na.rm=T))
-      landscape_data<-rbind(landscape_data,land_data)
-    }
-    return(landscape_data)
-  }
-  
-  landscape_train_withKN <- capture_zone_DOC(training_df)
-  landscape_test_withKN <-  capture_zone_DOC(testing_df)
-  
-  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
-  names(M4_test_withKN) <- names(M4_train_withKN)
-  
-  ## create the training and testing sets 
-  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-  M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
-  M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
-  
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON")
+  rf_DON_m4<-model_build(WP2Train,"DON")
   
   ## map3 predict accuracy
-  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
-  map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
+  map4_predict<-predict(rf_DON_m4,newdata=WP2Test)
+  map4_train<-predict(rf_DON_m4,newdata=WP2Train)
   # 
   map4_predict$data$truth<-10^map4_predict$data$truth
   map4_predict$data$response<-10^map4_predict$data$response
