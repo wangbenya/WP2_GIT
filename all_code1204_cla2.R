@@ -355,8 +355,8 @@ for (tt in c(1:8)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7)]
-  WP2Test<-M2_test[,-c(4,6,7)]
+  WP2Train<-M2_train[,-c(4,7)]
+  WP2Test<-M2_test[,-c(4,7)]
   
  #rf_DON_m2 <- model_build(WP2Train,"DON")
   # kriging for DOC
@@ -409,6 +409,9 @@ for (tt in c(1:8)){
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
+  
+ M4_train_withKN$DOC_dep<-M4_train_withKN$DOC_k*M4_train_withKN$GW_depth
+ M4_test_withKN$DOC_dep<-M4_test_withKN$DOC_k*M4_test_withKN$GW_depth
   
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON")
