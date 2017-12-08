@@ -223,7 +223,6 @@ NH4_GW4<-read.csv("~/WP2_GIT/NH4_GW4.csv",header = T)
 TN_GW4<-read.csv("~/WP2_GIT/TN_GW4.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
 
-#all_points[all_points$DON==0.25,"DON"]=all_points[all_points$DON==0.25,"DON"]+0.25
 #Make a distance matrix
 all_points2<-read_pointDataframes(all_points)
 all_points2<-add_S1S2(all_points2)
@@ -255,8 +254,8 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 4, upper =8)
+  makeIntegerParam("nodesize", lower = 15, upper = 20),
+  makeIntegerParam("mtry", lower = 6, upper =10)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -366,8 +365,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -394,14 +393,14 @@ for (tt in c(1:30)){
     
     }
   
-#  M2_train$DON_m3<-log10(M2_train$DON_m3)
- # M2_test$DON_m3<-log10(M2_test$DON_m3)
+  #M2_train$DON_m3<-log10(M2_train$DON_m3)
+  #M2_test$DON_m3<-log10(M2_test$DON_m3)
   
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
 
-  for(i in c(5:8)){
+  for(i in c(5:8,10,11)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
