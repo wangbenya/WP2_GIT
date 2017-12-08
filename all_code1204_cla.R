@@ -231,15 +231,16 @@ all_points<-subset(all_points,all_points$type==1)
 seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
+
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 1000L)
-rdesc = makeResampleDesc("CV", iters = 5)
+ctrl = makeTuneControlIrace(maxExperiments = 500L)
+rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 15, upper = 20),
-  makeIntegerParam("mtry", lower = 4, upper =8)
+  makeIntegerParam("nodesize", lower = 10, upper = 15),
+  makeIntegerParam("mtry", lower = 4, upper =6)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -263,13 +264,13 @@ model_build <- function(dataset, n_target) {
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:50)){
+for (tt in c(1:100)){
 
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.9, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
