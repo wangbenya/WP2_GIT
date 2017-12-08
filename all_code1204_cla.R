@@ -221,8 +221,8 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=5,"type"]=1
-newdata[newdata$dev>5,"type"]=0
+newdata[newdata$dev<=6,"type"]=1
+newdata[newdata$dev>6,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
@@ -232,7 +232,7 @@ seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
 #class_rf$par.vals<-list(importance=T)
-ctrl = makeTuneControlIrace(maxExperiments = 500L)
+ctrl = makeTuneControlIrace(maxExperiments = 1000L)
 rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
