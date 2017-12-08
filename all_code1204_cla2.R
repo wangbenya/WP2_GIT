@@ -249,7 +249,7 @@ model_build <- function(dataset, n_target) {
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                           show.info = FALSE)
+                           show.info = FALSE,measures=rsq)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
   ## train the final model 
   #set.seed(719)
