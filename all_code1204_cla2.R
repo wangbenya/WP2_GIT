@@ -263,13 +263,15 @@ model_build <- function(dataset, n_target) {
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:8)){
+for (pp in seq(0.65,0.9,0.05)){
+
+for (tt in c(1:10)){
 
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -410,9 +412,6 @@ for (tt in c(1:8)){
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
   
- M4_train_withKN$DOC_dep<-M4_train_withKN$DOC_k*M4_train_withKN$GW_depth
- M4_test_withKN$DOC_dep<-M4_test_withKN$DOC_k*M4_test_withKN$GW_depth
-  
   set.seed(seeds)
   rf_DON_m4<-model_build(M4_train_withKN,"DON")
   
@@ -458,13 +457,13 @@ for (tt in c(1:8)){
   M4_ACC_train<-postResample(map4_train_cla[,2],map4_train_cla[,1])[1]
   M4_kappa_train<-postResample(map4_train_cla[,2],map4_train_cla[,1])[2]
   
-  sing_acc<-data.frame(M4_ACC,M4_kappa,M4_ACC_train,M4_kappa_train)
+  sing_acc<-data.frame(pp,M4_ACC,M4_kappa,M4_ACC_train,M4_kappa_train)
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
 
   }
 
-
+}
 
 
