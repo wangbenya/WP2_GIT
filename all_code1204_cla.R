@@ -239,12 +239,12 @@ rdesc = makeResampleDesc("CV", iters = 3)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 4, upper =6)
+  makeIntegerParam("nodesize", lower = 15, upper = 20),
+  makeIntegerParam("mtry", lower = 4, upper =8)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
-model_build <- function(dataset, n_target) {
+model_build <- function(dataset, n_target){
   #set.seed(719)
   ## define the regression task for DON 
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
@@ -269,7 +269,7 @@ for (tt in c(1:30)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -467,7 +467,7 @@ for (tt in c(1:30)){
   var.smpl_res <- variogram(f.res, training_df)
   plot(var.smpl_res)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph")))
+  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph","Exp")))
   
   plot(var.smpl_res,dat.fit_res)
   # Perform the krige interpolation (note the use of the variogram model
