@@ -259,12 +259,10 @@ model_build <- function(dataset, n_target) {
 }
 
      a1=1.0
-     a2=2.5
+     a2=2.0
     print(a1)
     print(a2)
 all_results<-data.frame()
-
-for (pp in seq(0.65,0.85,0.05)){
 
 for (tt in c(1:10)){
   print(pp)
@@ -272,7 +270,7 @@ for (tt in c(1:10)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -491,7 +489,5 @@ for (tt in c(1:10)){
   all_results<-rbind(all_results,sing_acc)
   
   print(all_results)
-
-  
-}}
-
+ 
+}
