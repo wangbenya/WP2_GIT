@@ -264,7 +264,7 @@ model_build <- function(dataset, n_target) {
     print(a2)
 all_results<-data.frame()
 
-for (pp in seq(0.65,0.85,,0.05)){
+for (pp in seq(0.65,0.85,0.05)){
 
 for (tt in c(1:10)){
   print(pp)
@@ -492,8 +492,6 @@ for (tt in c(1:10)){
   
   print(all_results)
 
-  }
-
-
-}
+  
+}}
 
