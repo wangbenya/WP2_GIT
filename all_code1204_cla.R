@@ -259,7 +259,7 @@ model_build <- function(dataset, n_target) {
 }
 
      a1=1.0
-     a2=2.0
+     a2=2.5
     print(a1)
     print(a2)
 all_results<-data.frame()
