@@ -269,7 +269,7 @@ for (tt in c(1:30)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.75, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
