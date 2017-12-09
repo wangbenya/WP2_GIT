@@ -74,6 +74,26 @@ read_pointDataframes <- function(read_data) {
   return(SPD)
 }
 
+
+reclass <- function(df, i, j) {
+  df[, "DON"][df[, "DON"] <= i] <- "Low"
+  df[, "DON"][df[, "DON"] < j] <- "Medium"
+  df[, "DON"][(df[, "DON"] != "Low") & (df[, "DON"] != "Medium")] <- "High"
+  df[, "DON"] <- factor(df[, "DON"], levels = c("Low", "Medium", "High"))
+  return(df)
+}
+
+
+reclass4<-function(df,i,j){
+  for (t in c(1,2)){
+    df[, t][df[, t] <=i] <- "Low"
+    df[, t][df[, t] < j] <- "Medium"
+    df[, t][(df[, t] != "Low") & (df[, t] != "Medium")] <- "High"
+    df[, t] <- factor(df[, t], levels = c("Low", "Medium", "High"))
+  }
+  return(df)
+}
+
 # Add X and Y to training 
 add_S1S2 <- function(dataset) {
   dataset$s1 <- coordinates(dataset)[, 1]
@@ -201,26 +221,26 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=2,"type"]=1
-newdata[newdata$dev>2,"type"]=0
+newdata[newdata$dev<=6,"type"]=1
+newdata[newdata$dev>6,"type"]=0
 
 all_points<-data.frame(newdata)
-
 all_points<-subset(all_points,all_points$type==1)
 
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
+
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
-rdesc = makeResampleDesc("CV", iters = 5)
+rdesc = makeResampleDesc("CV", iters = 3)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 4, upper =8)
+  makeIntegerParam("mtry", lower = 4, upper =6)
 #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -228,27 +248,29 @@ model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
-  ## cross validation
-  ## 10-fold cross-validation
   rin = makeResampleInstance(rdesc, task = WP3_target)
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
-                           show.info = FALSE,measures=rsq)
+                           show.info = FALSE)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
-  
   ## train the final model 
   #set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
   return(rf)
 }
 
+     a1=1.0
+     a2=2.5
+    print(a1)
+    print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:30)){
+for (tt in c(1:100)){
+
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.9, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -277,16 +299,15 @@ for (tt in c(1:30)){
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
   dat.krg_DON<-kriging_DON_m1
   
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))
-  
+  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))  
+
   M1_rmse<-postResample(map1_predict[,2],map1_predict[,1])[1]
   M1_r2<-postResample(map1_predict[,2],map1_predict[,1])[2]
   
   map1_train <- data.frame(observed_DON=training_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, training_points))
   
-  M1_rmse_train<-postResample(map1_train[,2],map1_train[,1])[1]
-  M1_r2_train<-postResample(map1_train[,2],map1_train[,1])[2]
-  
+  M1_rmse<-postResample(map1_train[,2],map1_train[,1])[1]
+
   ## M2, using RF to predict the DON
   a=700
   b=1400
@@ -309,8 +330,8 @@ for (tt in c(1:30)){
   landscape_train <- capture_zone_land(training_df)
   landscape_test <- capture_zone_land(testing_df)
   
-  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","DON_m3","Collect_Month","date_","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","DON_m3","Collect_Month",'date_',"s1","s2")])
+  M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
+  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
   
   names(M2_train) <- colnames(M2_test)
   
@@ -334,20 +355,12 @@ for (tt in c(1:30)){
      
     M2_train[,ii]<-droplevels(M2_train[,ii])
     M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
-    
     }
-  
-  M2_train$date_<-(M2_train$date_)^2
-  M2_test$date_<-(M2_test$date_)^2
-  
-  M2_train$DON_m3<-log10(M2_train$DON_m3)
-  M2_test$DON_m3<-log10(M2_test$DON_m3)
   
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-
-  for(i in c(5:8,10,12,13,14)){
+  for(i in c(5:8,10,11)){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -364,8 +377,8 @@ for (tt in c(1:30)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7,10)]
-  WP2Test<-M2_test[,-c(4,7,10)]
+  WP2Train<-M2_train[,-c(4,7)]
+  WP2Test<-M2_test[,-c(4,7)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
@@ -374,20 +387,77 @@ for (tt in c(1:30)){
   
   map2_predict$data$truth<-10^map2_predict$data$truth
   map2_predict$data$response<-10^map2_predict$data$response
-  map2_train$data$truth<-10^map2_train$data$truth
-  map2_train$data$response<-10^map2_train$data$response
   
+  map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
   
-  M2_rmse<-postResample(map2_predict$data$response, map2_predict$data$truth)[1]
-  M2_r2<-postResample(map2_predict$data$response, map2_predict$data$truth)[2]
+  M2_rmse<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
+  M2_r2<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
   
-  M2_rmse_train<-postResample(map2_train$data$response, map2_train$data$truth)[1]
-  M2_r2_train<-postResample(map2_train$data$response, map2_train$data$truth)[2]
+  # kriging for DOC
+  f.DOC <- as.formula(log10(DOC) ~ 1)
   
-
+  training_DOC <- training[,c(1,2,3,7)] %>% rbind(.,extra_n[,c(1,2,3,4)]) %>%
+    subset(.,.[,"DOC"]!="NA") %>% read_pointDataframes(.)
+  
+  training_DOC<-add_S1S2(training_DOC)
+  var.smpl_DOC <- variogram(f.DOC, training_DOC)
+  plot(var.smpl_DOC)
+  
+  dat.fit_DOC <- fit.variogram(var.smpl_DOC,vgm(c("Sph")))
+  plot(var.smpl_DOC,dat.fit_DOC)
+  # Perform the krige interpolation (note the use of the variogram model
+  dat.krg_DOC <- krige(f.DOC, training_DOC, base_grid, dat.fit_DOC) %>% raster(.) %>% raster::mask(., study_area)
+  values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
+  
+  ## create rasterstack with kriging data
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
+  names(kriging_nutrietn_DOC) <- c("DOC_k")
+  
+  ## extract the data from landscapes_withN
+  c=500
+  d=600
+  capture_zone_DOC<-function(df){
+    num<-nrow(df)
+    landscape_data<-data.frame()
+    for (r in seq(1,num)){
+      p1_long<-df@coords[r,1]
+      p1_lat<-df@coords[r,2]
+      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+c,p1_lat+d),c(p1_long+2*c,p1_lat+d),
+                           c(p1_long+2*c,p1_lat-d),c(p1_long+c,p1_lat-d),c(p1_long,p1_lat)))  
+      projection(pg)<- WGS84
+      p1_landscape<-raster::extract(kriging_nutrietn_DOC,pg)
+      land_data<-data.frame(DOC_k=mean(p1_landscape[[1]][,1],na.rm=T))
+      landscape_data<-rbind(landscape_data,land_data)
+    }
+    return(landscape_data)
+  }
+  
+  landscape_train_withKN <- capture_zone_DOC(training_df)
+  landscape_test_withKN <-  capture_zone_DOC(testing_df)
+  
+  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
+  names(M4_test_withKN) <- names(M4_train_withKN)
+  
+  ## create the training and testing sets 
+  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
+  M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
+  M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
+  
+  set.seed(seeds)
+  rf_DON_m4<-model_build(M4_train_withKN,"DON")
+  
+  ## map3 predict accuracy
+  map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
+  map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
+  # 
+  map4_predict$data$truth<-10^map4_predict$data$truth
+  map4_predict$data$response<-10^map4_predict$data$response
+  map4_train$data$truth<-10^map4_train$data$truth
+  map4_train$data$response<-10^map4_train$data$response
+  
   ## kriging reditusl 
-  training_df$DON_res<-map2_train$data$truth-map2_train$data$response
-  
+  training_df$DON_res<-map4_train$data$truth-map4_train$data$response
   ## map1, using kringing for DON interpolation
   f.res <- as.formula(DON_res ~ 1)
   # Compute the sample variogram; note that the f.1 trend model is one of the
@@ -399,14 +469,17 @@ for (tt in c(1:30)){
   plot(var.smpl_res,dat.fit_res)
   # Perform the krige interpolation (note the use of the variogram model
   kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
+  
   #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
+  map4_predict_res <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+  map4_predict_res$modified_DON<-map4_predict_res$response+map4_predict_res$predicted_DON_res
   
-  map4_predict <- data.frame(map2_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
-  map4_predict$modified_DON<-map4_predict$response+map4_predict$predicted_DON_res
+  map4_predict_cla <- data.frame(observed_DON=map4_predict_res$truth,predicted_DON=map4_predict_res$modified_DON)
   
-  M4_rmse<-postResample(map4_predict$modified_DON,map4_predict$truth)[1]
-  M4_r2<-postResample(map4_predict$modified_DON,map4_predict$truth)[2]
-  sing_acc<-data.frame(M1_r2,M2_r2,M4_r2,M1_r2_train,M2_r2_train)
+  M4_rmse<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
+  M4_r2<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
+  
+  sing_acc<-data.frame(M1_rmse,M2_rmse,M4_rmse,M1_r2,M2_r2,M4_r2)
   
   all_results<-rbind(all_results,sing_acc)
   
