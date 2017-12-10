@@ -239,12 +239,13 @@ rdesc = makeResampleDesc("CV", iters = 3)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 15, upper = 20),
-  makeIntegerParam("mtry", lower = 4, upper =8)
-#  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
+  makeIntegerParam("nodesize", lower = 10, upper = 15),
+  makeIntegerParam("mtry", lower = 4, upper =6)
+  #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
-model_build <- function(dataset, n_target){
+
+model_build <- function(dataset, n_target) {
   #set.seed(719)
   ## define the regression task for DON 
   WP3_target = makeRegrTask(id = "WP3_target", data = dataset, target = n_target)
@@ -297,7 +298,7 @@ for (tt in c(1:100)){
   kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
   values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
   dat.krg_DON<-kriging_DON_m1
-  
+
   map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))  
   map1_predict<-reclass4(map1_predict,a1,a2)
 
@@ -361,7 +362,7 @@ for (tt in c(1:100)){
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-  for(i in c(5:8,10,11)){
+  for(i in c("GW_depth","Distance","Distance_GWC","s1","s2")){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
