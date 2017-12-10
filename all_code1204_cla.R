@@ -264,12 +264,12 @@ model_build <- function(dataset, n_target){
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:30)){
+for (tt in c(1:100)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.75, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
