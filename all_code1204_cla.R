@@ -231,6 +231,7 @@ all_points<-subset(all_points,all_points$type==1)
 seed=35
 set.seed(seed)
 reg_rf = makeLearner("regr.randomForest")
+class_rf = makeLearner("classif.randomForest")
 
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
@@ -253,6 +254,21 @@ model_build <- function(dataset, n_target) {
   res_rf = mlr::tuneParams(reg_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
                            show.info = FALSE)
   lrn_rf = setHyperPars(reg_rf, par.vals = res_rf$x)
+  ## train the final model 
+  #set.seed(719)
+  rf <- mlr::train(lrn_rf, WP3_target)
+  return(rf)
+}
+
+
+model_build2 <- function(dataset, n_target) {
+  #set.seed(719)
+  ## define the regression task for DON 
+  WP3_target = makeClassifTask(id = "WP3_target", data = dataset, target = n_target)
+  rin = makeResampleInstance(rdesc, task = WP3_target)
+  res_rf = mlr::tuneParams(class_rf, WP3_target, resampling = rdesc, par.set = para_rf, control = ctrl,
+                           show.info = FALSE)
+  lrn_rf = setHyperPars(class_rf, par.vals = res_rf$x)
   ## train the final model 
   #set.seed(719)
   rf <- mlr::train(lrn_rf, WP3_target)
@@ -396,7 +412,21 @@ for (tt in c(1:100)){
 
   M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
+ 
+  ## kriging reditusl 
+  training_df$DON_res<-map2_train$data$truth-map2_train$data$response
+  ## map1, using kringing for DON interpolation
+  f.res <- as.formula(DON_res ~ 1)
+  # Compute the sample variogram; note that the f.1 trend model is one of the
+  var.smpl_res <- variogram(f.res, training_df)
+  plot(var.smpl_res)
+  # Compute the variogram model by passing the nugget, sill and range value
+  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph","Exp")))
   
+  plot(var.smpl_res,dat.fit_res)
+  # Perform the krige interpolation (note the use of the variogram model
+  kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
+ 
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
@@ -439,8 +469,12 @@ for (tt in c(1:100)){
   landscape_train_withKN <- capture_zone_DOC(training_df)
   landscape_test_withKN <-  capture_zone_DOC(testing_df)
   
-  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN))
-  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
+  map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
+  map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+
+
+  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN),map2_train_res)
+  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN),map2_test_res)
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   ## create the training and testing sets 
@@ -448,41 +482,22 @@ for (tt in c(1:100)){
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
   
+  M4_train_withKN$DON<-10^(M4_train_withKN$DON)
+  M4_test_withKN$DON<-10^(M4_test_withKN$DON)
+  
+  M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
+  M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
+
   set.seed(seeds)
-  rf_DON_m4<-model_build(M4_train_withKN,"DON")
+  rf_DON_m4<-model_build2(M4_train_withKN,"DON")
   
   ## map3 predict accuracy
   map4_predict<-predict(rf_DON_m4,newdata=M4_test_withKN)
   map4_train<-predict(rf_DON_m4,newdata=M4_train_withKN)
-  # 
-  map4_predict$data$truth<-10^map4_predict$data$truth
-  map4_predict$data$response<-10^map4_predict$data$response
-  map4_train$data$truth<-10^map4_train$data$truth
-  map4_train$data$response<-10^map4_train$data$response
-  
-  ## kriging reditusl 
-  training_df$DON_res<-map4_train$data$truth-map4_train$data$response
-  ## map1, using kringing for DON interpolation
-  f.res <- as.formula(DON_res ~ 1)
-  # Compute the sample variogram; note that the f.1 trend model is one of the
-  var.smpl_res <- variogram(f.res, training_df)
-  plot(var.smpl_res)
-  # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph","Exp")))
-  
-  plot(var.smpl_res,dat.fit_res)
-  # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
-  
-  #values(kriging_DON_res) <- 10 ^ (values(kriging_DON_res))
-  map4_predict_res <- data.frame(map4_predict$data,predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
-  map4_predict_res$modified_DON<-map4_predict_res$response+map4_predict_res$predicted_DON_res
-  
-  map4_predict_cla <- data.frame(observed_DON=map4_predict_res$truth,predicted_DON=map4_predict_res$modified_DON)
-  map4_predict_cla<-reclass4(map4_predict_cla,a1,a2)
 
-  M4_ACC<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[1]
-  M4_kappa<-postResample(map4_predict_cla[,2],map4_predict_cla[,1])[2]
+  # 
+  M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
+  M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
