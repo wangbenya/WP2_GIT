@@ -311,19 +311,6 @@ for (tt in c(1)){
   # Add X and Y to training 
   training_df<-add_S1S2(training_df)
   testing_df<-add_S1S2(testing_df)
-  
-  # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph")))
-  
-  plot(var.smpl1,dat.fit1)
-  # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_m1 <- krige(f.1, training_df, base_grid, dat.fit1) %>% raster(.) %>% raster::mask(., study_area)
-  values(kriging_DON_m1) <- 10 ^ (values(kriging_DON_m1))
-  dat.krg_DON<-kriging_DON_m1
-
-  map1_predict <- data.frame(observed_DON=testing_df@data$DON,predicted_DON=raster::extract(kriging_DON_m1, testing_points))  
-  map1_predict<-reclass4(map1_predict,a1,a2)
-1_ACC_train<-postResample(map1_train[,2],map1_train[,1])[1]
 
   ## M2, using RF to predict the DON
   for (a in seq(100,2000,100)){
