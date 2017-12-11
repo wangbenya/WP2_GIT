@@ -295,25 +295,19 @@ for (tt in c(1)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
-  training <- all_points[trainIndex,]
-  testing <- all_points[-trainIndex,]
+  training <- all_points
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
-  testing_df <-  read_pointDataframes(testing) 
-  
   training_points<- read_points(training)
-  testing_points <- read_points(testing)
-  
+
   ## map1, using kringing for DON interpolation
   f.1 <- as.formula(log10(DON) ~ 1)
   # Add X and Y to training 
   training_df<-add_S1S2(training_df)
-  testing_df<-add_S1S2(testing_df)
 
   ## M2, using RF to predict the DON
-  for (a in seq(100,2000,100)){
+  for (a in seq(100,1500,100)){
     for (b in seq(100,2000,100)){
 
   capture_zone_land<-function(df){
@@ -333,12 +327,9 @@ for (tt in c(1)){
   }
   
   landscape_train <- capture_zone_land(training_df)
-  landscape_test <- capture_zone_land(testing_df)
   
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
-  M2_test <- cbind(as.data.frame(landscape_test), testing_df@data[c("DON","s1","s2")])
   
-  names(M2_train) <- colnames(M2_test)
   
   common_landscape<-function(land){
     land_dataset<-data.frame(table(M2_train[,land]))
@@ -353,17 +344,7 @@ for (tt in c(1)){
   
   max_list<-list(soil_max,veg_max,landuse_max,cat_max)
   
-  for (ii in seq(1,4)){
-    M2_train[,ii]<-factor(M2_train[,ii],levels = unique(values(landscapes[[ii]]))[-1])
-    M2_test[,ii]<-factor(M2_test[,ii],levels=unique(values(landscapes[[ii]]))[-1])
-    M2_test [(which(!(M2_test[,ii] %in% M2_train[,ii]))),ii]<-as.numeric(max_list[[ii]])
-     
-    M2_train[,ii]<-droplevels(M2_train[,ii])
-    M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
-    }
-  
   M2_train$DON<-log10(M2_train$DON)
-  M2_test$DON<-log10(M2_test$DON)
   
   for(i in c("GW_depth","Distance","Distance_GWC","slope","aspect","s1","s2")){
     
@@ -371,29 +352,25 @@ for (tt in c(1)){
     max_train<-max(M2_train[,i])
     
     M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
-    M2_test[,i]<-(M2_test[,i]-min_train)/(max_train-min_train)
     
     sd_train<-sd(M2_train[,i])
     mean_train<-mean(M2_train[,i])
     
     M2_train[,i]<-(M2_train[,i]-mean_train)/sd_train
-    M2_test[,i]<-(M2_test[,i]-mean_train)/sd_train
     
   }
   
   set.seed(seeds)
   WP2Train<-M2_train[,-c(4,7)]
-  WP2Test<-M2_test[,-c(4,7)]
   
   rf_DON_m2 <- model_build(WP2Train,"DON")
   
-  map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
   
-  map2_predict$data$truth<-10^map2_predict$data$truth
-  map2_predict$data$response<-10^map2_predict$data$response
+  map2_train$data$truth<-10^map2_train$data$truth
+  map2_train$data$response<-10^map2_train$data$response
   
-  map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
+  map2_predict_cla <- data.frame(observed_DON=map2_train$data$truth,predicted_DON=map2_train$data$response)
   
   map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
 
