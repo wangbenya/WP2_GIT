@@ -231,8 +231,8 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=6,"type"]=1
-newdata[newdata$dev>6,"type"]=0
+newdata[newdata$dev<=5,"type"]=1
+newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
@@ -254,7 +254,6 @@ para_rf = makeParamSet(
   makeIntegerParam("mtry", lower = 4, upper =8)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
-
 
 model_build <- function(dataset, n_target) {
   #set.seed(719)
@@ -416,6 +415,9 @@ for (tt in c(1:100)){
   map2_predict$data$truth<-10^map2_predict$data$truth
   map2_predict$data$response<-10^map2_predict$data$response
   
+  map2_train$data$truth<-10^map2_train$data$truth
+  map2_train$data$response<-10^map2_train$data$response
+  
   map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
   
   map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
@@ -481,18 +483,18 @@ for (tt in c(1:100)){
   
   map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
   map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+  
+  map2_train_DON <- map2_train$data$response
+  map2_test_DON <- map2_predict$data$response
 
-  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN),map2_train_res)
-  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN),map2_test_res)
+  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_res,map2_train_DON,DON=map2_train$data$truth)
+  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_res,map2_test_DON,DON=map2_predict$data$truth)
   names(M4_test_withKN) <- names(M4_train_withKN)
   
   ## create the training and testing sets 
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
-  
-  M4_train_withKN$DON<-10^(M4_train_withKN$DON)
-  M4_test_withKN$DON<-10^(M4_test_withKN$DON)
   
   M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
   M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
