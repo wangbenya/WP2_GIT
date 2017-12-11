@@ -35,6 +35,8 @@ Soil <- raster("~/WP2/data/soil1.ovr")
 Veg <- raster("~/WP2/data/vegetation.ovr")
 Land_use <- raster("~/WP2/data/landuse1.ovr")
 Cat <- raster("~/WP2/data/catch_name2.tif.ovr")
+DEM<-raster("~/WP2/data/topo_ProjectRaster3.tif.ovr")
+
 ## define the function 
 ## preprocess 
 study_area <- spTransform(study_area, WGS84)
@@ -125,6 +127,8 @@ Soil <- pre(Soil)
 Veg <- pre(Veg)
 Land_use <- pre(Land_use)
 Cat <- pre(Cat)
+DEM <- pre(DEM)
+
 
 v_Veg<-values(Veg)
 v_Veg[v_Veg %in% c(2,3,4)]=1
@@ -152,6 +156,10 @@ r <- raster(study_area)
 res(r) <- res(Soil) # 10 km if your CRS's units are in km
 base_grid <- as(r, 'SpatialGrid')
 #plot(base_grid)
+
+x<-terrain(DEM,opt=c("slope","aspect"),neighbors = 8,unit = "degrees")
+slope=x[[1]]
+aspect=x[[2]]
 
 ## M2, using RF to predict the DON
 depth <- read.csv("~/WP2/data/sampling_depth.csv",header=T) %>% read_pointDataframes(.)
@@ -190,8 +198,8 @@ Distance_GWC<-distanceFromPoints(base_GWC,GW_center)
 Distance_GWC@data@names<-"Distance_GWC"
 
 ## load the data 
-landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP,Distance_GWC)
-names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP","Distance_GWC")
+landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP,Distance_GWC,slope,aspect)
+names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP","Distance_GWC","slope")
 
 ## load the data 
 set.seed(666)

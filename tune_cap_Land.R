@@ -35,6 +35,7 @@ Soil <- raster("~/WP2/data/soil1.ovr")
 Veg <- raster("~/WP2/data/vegetation.ovr")
 Land_use <- raster("~/WP2/data/landuse1.ovr")
 Cat <- raster("~/WP2/data/catch_name2.tif.ovr")
+DEM<-raster("~/WP2/data/topo_ProjectRaster3.tif.ovr")
 ## define the function 
 ## preprocess 
 study_area <- spTransform(study_area, WGS84)
@@ -105,7 +106,6 @@ Soil <- pre(Soil)
 Veg <- pre(Veg)
 Land_use <- pre(Land_use)
 Cat <- pre(Cat)
-
 v_Veg<-values(Veg)
 v_Veg[v_Veg %in% c(2,3,4)]=1
 v_Veg[v_Veg %in% c(8,9)]=8
