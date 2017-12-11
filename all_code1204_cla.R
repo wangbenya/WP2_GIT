@@ -487,9 +487,11 @@ for (tt in c(1:100)){
   map2_train_DON <- map2_train$data$response
   map2_test_DON <- map2_predict$data$response
 
-  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_res,map2_train_DON,map2_predict=map2_train_DON+map2_train_res,DON=map2_train$data$truth)
-  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_res,map2_test_DON,map2_predict=map2_test_DON+map2_test_res,DON=map2_predict$data$truth)
-  names(M4_test_withKN) <- names(M4_train_withKN)
+  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_res,map2_train_DON,DON_m2=map2_train_DON+map2_train_res,DON=map2_train$data$truth)
+  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_res,map2_test_DON,DON_m2=map2_test_DON+map2_test_res,DON=map2_predict$data$truth)
+  names(M4_test_withKN)[4]<- c("DON_m2")
+    
+    names(M4_train_withKN)<-names(M4_test_withKN)
   
   ## create the training and testing sets 
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
