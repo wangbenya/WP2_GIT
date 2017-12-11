@@ -116,7 +116,9 @@ get_landscape<-function(df){
     Distance=mean(aa[,6])
     Distance_LP=mean(aa[,7])
     Distance_GWC=mean(aa[,8])
-    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance,Distance_LP,Distance_GWC)
+    slope=mean(aa[,9])
+    aspect=mean(aa[,10])
+    sing_land<-data.frame(Soil,Veg,Landuse,Catchment,GW_depth,Distance,Distance_LP,Distance_GWC,slope,aspect)
     landscape_all<-rbind(landscape_all,sing_land)
   }
   return(landscape_all)
@@ -199,7 +201,7 @@ Distance_GWC@data@names<-"Distance_GWC"
 
 ## load the data 
 landscapes<-stack(Soil,Veg,Land_use,Cat,depth_k,water_distance,distance_LP,Distance_GWC,slope,aspect)
-names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP","Distance_GWC","slope")
+names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distance","Distance_LP","Distance_GWC","slope","aspect")
 
 ## load the data 
 set.seed(666)
@@ -248,8 +250,8 @@ rdesc = makeResampleDesc("CV", iters = 3)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 10, upper = 15),
-  makeIntegerParam("mtry", lower = 4, upper =6)
+  makeIntegerParam("nodesize", lower = 15, upper = 20),
+  makeIntegerParam("mtry", lower = 4, upper =8)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -386,7 +388,7 @@ for (tt in c(1:100)){
   M2_train$DON<-log10(M2_train$DON)
   M2_test$DON<-log10(M2_test$DON)
   
-  for(i in c("GW_depth","Distance","Distance_GWC","s1","s2")){
+  for(i in c("GW_depth","Distance","Distance_GWC","slope","aspect","s1","s2")){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -479,7 +481,6 @@ for (tt in c(1:100)){
   
   map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
   map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
-
 
   M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN),map2_train_res)
   M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN),map2_test_res)
