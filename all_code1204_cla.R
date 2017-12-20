@@ -290,7 +290,7 @@ model_build2 <- function(dataset, n_target) {
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:100)){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -384,8 +384,10 @@ for (tt in c(1:100)){
     M2_test[,ii]<-factor(M2_test[,ii],levels = levels(M2_train[,ii]))
     }
   
-  M2_train$DON<-log10(M2_train$DON)
-  M2_test$DON<-log10(M2_test$DON)
+   M2_train<-reclass(M2_train,a1,a2)
+   M2_test<-reclass(M2_test,a1,a2)
+#  M2_train$DON<-log10(M2_train$DON)
+#  M2_test$DON<-log10(M2_test$DON)
   
   for(i in c("GW_depth","Distance","Distance_GWC","slope","aspect","s1","s2")){
     
@@ -407,38 +409,25 @@ for (tt in c(1:100)){
   WP2Train<-M2_train[,-c(4,7)]
   WP2Test<-M2_test[,-c(4,7)]
   
-  rf_DON_m2 <- model_build(WP2Train,"DON")
+  rf_DON_m2 <- model_build2(WP2Train,"DON")
   
   map2_predict<-predict(rf_DON_m2,newdata=WP2Test)
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
   
-  map2_predict$data$truth<-10^map2_predict$data$truth
-  map2_predict$data$response<-10^map2_predict$data$response
+  #map2_predict$data$truth<-10^map2_predict$data$truth
+  #map2_predict$data$response<-10^map2_predict$data$response
   
-  map2_train$data$truth<-10^map2_train$data$truth
-  map2_train$data$response<-10^map2_train$data$response
+  #map2_train$data$truth<-10^map2_train$data$truth
+  #map2_train$data$response<-10^map2_train$data$response
   
   map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
   
-  map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
+  #map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
 
   M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
  
   ## kriging reditusl 
-  training_df$DON_res<-map2_train$data$truth-map2_train$data$response
-  ## map1, using kringing for DON interpolation
-  f.res <- as.formula(DON_res ~ 1)
-  # Compute the sample variogram; note that the f.1 trend model is one of the
-  var.smpl_res <- variogram(f.res, training_df)
-  plot(var.smpl_res)
-  # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit_res <- fit.variogram(var.smpl_res,vgm(c("Sph","Exp")))
-  
-  plot(var.smpl_res,dat.fit_res)
-  # Perform the krige interpolation (note the use of the variogram model
-  kriging_DON_res <- krige(f.res, training_df, base_grid, dat.fit_res) %>% raster(.) %>% raster::mask(., study_area)
- 
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
   
@@ -456,51 +445,26 @@ for (tt in c(1:100)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
-  names(kriging_nutrietn_DOC) <- c("DOC_k")
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
+  names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
   
-  ## extract the data from landscapes_withN
-  c=500
-  d=600
-  capture_zone_DOC<-function(df){
-    num<-nrow(df)
-    landscape_data<-data.frame()
-    for (r in seq(1,num)){
-      p1_long<-df@coords[r,1]
-      p1_lat<-df@coords[r,2]
-      pg<-spPolygons(rbind(c(p1_long,p1_lat),c(p1_long+c,p1_lat+d),c(p1_long+2*c,p1_lat+d),
-                           c(p1_long+2*c,p1_lat-d),c(p1_long+c,p1_lat-d),c(p1_long,p1_lat)))  
-      projection(pg)<- WGS84
-      p1_landscape<-raster::extract(kriging_nutrietn_DOC,pg)
-      land_data<-data.frame(DOC_k=mean(p1_landscape[[1]][,1],na.rm=T))
-      landscape_data<-rbind(landscape_data,land_data)
-    }
-    return(landscape_data)
-  }
+  ## extract the data from landscapes
+  landscape_train_withKN <- raster::extract(kriging_nutrietn_DOC,training_df)
+  landscape_test_withKN <-  raster::extract(kriging_nutrietn_DOC,testing_df)
   
-  landscape_train_withKN <- capture_zone_DOC(training_df)
-  landscape_test_withKN <-  capture_zone_DOC(testing_df)
-  
-  map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
-  map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
+#  map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
+#  map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
   
   map2_train_DON <- map2_train$data$response
   map2_test_DON <- map2_predict$data$response
 
-  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_res,map2_train_DON,DON_m2=map2_train_DON+map2_train_res,DON=map2_train$data$truth)
-  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_res,map2_test_DON,DON_m2=map2_test_DON+map2_test_res,DON=map2_predict$data$truth)
-  names(M4_test_withKN)[4]<- c("DON_m2")
-    
-    names(M4_train_withKN)<-names(M4_test_withKN)
+  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_DON,DON=map2_train$data$truth)
+  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_DON,DON=map2_predict$data$truth)
+  
+  names(M4_train_withKN)<-names(M4_test_withKN)
   
   ## create the training and testing sets 
-  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
-  M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
-  M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
-  
-  M4_train_withKN<-reclass(M4_train_withKN,a1,a2)
-  M4_test_withKN<-reclass(M4_test_withKN,a1,a2)
-
+  #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC
   set.seed(seeds)
   rf_DON_m4<-model_build2(M4_train_withKN,"DON")
   
