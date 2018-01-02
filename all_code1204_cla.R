@@ -283,9 +283,8 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-for (a1 in c(0.5,1.0)){
-  for (a2 in c(1.5,2.0,2.5)){
-    
+a1=1.0
+a2=2.0
 all_results<-data.frame()
 
 for (tt in c(1)){
@@ -419,12 +418,14 @@ for (tt in c(1)){
   #map2_train$data$response<-10^map2_train$data$response
   
   map2_predict_cla <- data.frame(observed_DON=map2_predict$data$truth,predicted_DON=map2_predict$data$response)
-  
+  map2_train_cla <- data.frame(observed_DON=map2_train$data$truth,predicted_DON=map2_train$data$response)
   #map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
 
   M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
   M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
  
+  M2_ACC_train<-postResample(map2_train_cla[,2],map2_train_cla[,1])[1]
+
   ## kriging reditusl 
   # kriging for DOC
   f.DOC <- as.formula(log10(DOC) ~ 1)
@@ -471,7 +472,9 @@ for (tt in c(1)){
   M4_ACC<-postResample(map4_predict$data$response,map4_predict$data$truth)[1]
   M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
+  M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
+
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
@@ -479,4 +482,3 @@ for (tt in c(1)){
   print(all_results)
  
 }
-}}
