@@ -283,10 +283,9 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-    a1=1.0
-    a2=2.0
-    print(a1)
-    print(a2)
+for (a1 in c(0.5,1.0)){
+  for (a2 in c(1.5,2.0,2.5)){
+    
 all_results<-data.frame()
 
 for (tt in c(1)){
@@ -405,8 +404,8 @@ for (tt in c(1)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7)]
-  WP2Test<-M2_test[,-c(4,7)]
+  WP2Train<-M2_train[,-c(4,7,9,10)]
+  WP2Test<-M2_test[,-c(4,7,9,10)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
@@ -444,8 +443,8 @@ for (tt in c(1)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
-  names(kriging_nutrietn_DOC) <- c("DOC_k")
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
+  names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
   
   ## extract the data from landscapes
   landscape_train_withKN <- raster::extract(kriging_nutrietn_DOC,training_df)
@@ -475,7 +474,9 @@ for (tt in c(1)){
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
-
+  print(a1)
+  print(a2)
   print(all_results)
  
 }
+}}
