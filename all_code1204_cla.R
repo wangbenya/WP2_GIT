@@ -250,7 +250,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
   makeIntegerParam("nodesize", lower = 35, upper = 40),
-  makeIntegerParam("mtry", lower = 6, upper =10)
+  makeIntegerParam("mtry", lower = 2, upper =5)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
