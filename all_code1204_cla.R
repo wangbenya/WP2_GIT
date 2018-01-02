@@ -206,7 +206,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 ## load the data 
 set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
-
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
@@ -284,13 +283,13 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-     a1=1.0
-     a2=2.0
+    a1=1.0
+    a2=2.0
     print(a1)
     print(a2)
 all_results<-data.frame()
 
-for (tt in c(1:30)){
+for (tt in c(1)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -445,8 +444,8 @@ for (tt in c(1:30)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
-  names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
+  names(kriging_nutrietn_DOC) <- c("DOC_k")
   
   ## extract the data from landscapes
   landscape_train_withKN <- raster::extract(kriging_nutrietn_DOC,training_df)
@@ -455,11 +454,8 @@ for (tt in c(1:30)){
 #  map2_train_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, training_points))
 #  map2_test_res <- data.frame(predicted_DON_res=raster::extract(kriging_DON_res, testing_points))
   
-  map2_train_DON <- map2_train$data$response
-  map2_test_DON <- map2_predict$data$response
-
-  M4_train_withKN <- cbind(as.data.frame(landscape_train_withKN),map2_train_DON,DON=map2_train$data$truth)
-  M4_test_withKN <- cbind(as.data.frame(landscape_test_withKN),map2_test_DON,DON=map2_predict$data$truth)
+  M4_train_withKN <- cbind(WP2Train,as.data.frame(landscape_train_withKN))
+  M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
   
   names(M4_train_withKN)<-names(M4_test_withKN)
   
@@ -479,7 +475,7 @@ for (tt in c(1:30)){
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
-  
+
   print(all_results)
  
 }
