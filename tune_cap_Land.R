@@ -285,7 +285,7 @@ model_build2 <- function(dataset, n_target) {
 
 a1=1.0
 a2=2.0
-
+all_results<-data.frame()
   training <- all_points
   ## load the point data 
   training_df <- read_pointDataframes(training)  
