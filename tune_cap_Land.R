@@ -344,7 +344,7 @@ all_results<-data.frame()
   #map2_predict_cla<-reclass4(map2_predict_cla,a1,a2
   M2_ACC_train<-postResample(map2_train_cla[,2],map2_train_cla[,1])[1]
   ## create the training and testing sets 
-  sing_acc<-data.frame(a1,a2,M2_ACC_train)
+  sing_acc<-data.frame(a,b,M2_ACC_train)
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
