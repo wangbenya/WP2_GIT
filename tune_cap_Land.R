@@ -206,7 +206,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 ## load the data 
 set.seed(666)
 seed.list<-sample(1:1000,300,replace =F)
-
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
 extra_n<-subset(extra_n,!(extra_n$WIN_Site_ID %in% all_points$WIN_Site_ID))
@@ -245,13 +244,13 @@ class_rf = makeLearner("classif.randomForest")
 
 #class_rf$par.vals<-list(importance=T)
 ctrl = makeTuneControlIrace(maxExperiments = 500L)
-rdesc = makeResampleDesc("CV", iters = 3)
+rdesc = makeResampleDesc("CV", iters = 5)
 
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(200,500,50)),
-  makeIntegerParam("nodesize", lower = 15, upper = 20),
-  makeIntegerParam("mtry", lower = 4, upper =8)
+  makeIntegerParam("nodesize", lower = 50, upper = 55),
+  makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -284,30 +283,20 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-     a1=1.0
-     a2=2.0
-    print(a1)
-    print(a2)
-all_results<-data.frame()
-
-for (tt in c(1)){
-  print(tt)
-  seeds<-seed.list[tt]
-  set.seed(seeds)
+a1=1.0
+a2=2.0
 
   training <- all_points
-  
   ## load the point data 
-  training_df <- read_pointDataframes(training)
+  training_df <- read_pointDataframes(training)  
   training_points<- read_points(training)
-
+  
   ## map1, using kringing for DON interpolation
   f.1 <- as.formula(log10(DON) ~ 1)
   # Add X and Y to training 
-  training_df<-add_S1S2(training_df)
-
+  training_df<-add_S1S2(training_df)  
   ## M2, using RF to predict the DON
-  for (a in seq(100,1500,100)){
+ for (a in seq(100,1500,100)){
     for (b in seq(100,2000,100)){
 
   capture_zone_land<-function(df){
@@ -327,24 +316,11 @@ for (tt in c(1)){
   }
   
   landscape_train <- capture_zone_land(training_df)
-  
   M2_train <- cbind(as.data.frame(landscape_train), training_df@data[c("DON","s1","s2")])
-  
-  
-  common_landscape<-function(land){
-    land_dataset<-data.frame(table(M2_train[,land]))
-    land_common<-subset(land_dataset,land_dataset[,2]==max(land_dataset[,2]))[1]
-    return(as.matrix(land_common))
-  }
-  
-  soil_max = common_landscape("Soil")[1]
-  veg_max=common_landscape("Veg")[1]
-  landuse_max = common_landscape("Landuse")[1]
-  cat_max = common_landscape("Catchment")[1]
-  
-  max_list<-list(soil_max,veg_max,landuse_max,cat_max)
-  
-  M2_train$DON<-log10(M2_train$DON)
+
+   M2_train<-reclass(M2_train,a1,a2)
+#  M2_train$DON<-log10(M2_train$DON)
+#  M2_test$DON<-log10(M2_test$DON)
   
   for(i in c("GW_depth","Distance","Distance_GWC","slope","aspect","s1","s2")){
     
@@ -361,26 +337,16 @@ for (tt in c(1)){
   }
   
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7)]
+  WP2Train<-M2_train[,-c(4,7,9,10)]
   
-  rf_DON_m2 <- model_build(WP2Train,"DON")
-  
+  rf_DON_m2 <- model_build2(WP2Train,"DON")
   map2_train<-predict(rf_DON_m2,newdata=WP2Train)
-  
-  map2_train$data$truth<-10^map2_train$data$truth
-  map2_train$data$response<-10^map2_train$data$response
-  
-  map2_predict_cla <- data.frame(observed_DON=map2_train$data$truth,predicted_DON=map2_train$data$response)
-  
-  map2_predict_cla<-reclass4(map2_predict_cla,a1,a2)
-
-  M2_ACC<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[1]
-  M2_kappa<-postResample(map2_predict_cla[,2],map2_predict_cla[,1])[2]
- 
-  sing_acc<-data.frame(a,b,M2_ACC,M2_kappa)
-  
+  map2_train_cla <- data.frame(observed_DON=map2_train$data$truth,predicted_DON=map2_train$data$response)
+  #map2_predict_cla<-reclass4(map2_predict_cla,a1,a2
+  M2_ACC_train<-postResample(map2_train_cla[,2],map2_train_cla[,1])[1]
+  ## create the training and testing sets 
+  sing_acc<-data.frame(a1,a2,M2_ACC_train)
   all_results<-rbind(all_results,sing_acc)
-  
   print(all_results)
- }}
-}
+ 
+}}
