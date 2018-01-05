@@ -336,7 +336,6 @@ a2=2.0
     
   }
   
-  set.seed(seeds)
   WP2Train<-M2_train[,-c(4,7,9,10)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
