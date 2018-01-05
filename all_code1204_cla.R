@@ -292,7 +292,7 @@ for (tt in c(1:5)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  for (pp in c(0.65,0.7,0.75,0.8,0.85,0.9))
+  for (pp in c(0.65,0.7,0.75,0.8,0.85,0.9)){
   trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
@@ -482,6 +482,5 @@ for (tt in c(1:5)){
   print(a2)
   print(all_results)
  
-}
-}
+}}
 print(summary(all_results))
