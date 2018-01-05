@@ -292,8 +292,7 @@ for (tt in c(1:5)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  for (pp in c(0.65,0.7,0.75,0.8,0.85,0.9)){
-  trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -384,6 +383,7 @@ for (tt in c(1:5)){
   
    M2_train<-reclass(M2_train,a1,a2)
    M2_test<-reclass(M2_test,a1,a2)
+   
 #  M2_train$DON<-log10(M2_train$DON)
 #  M2_test$DON<-log10(M2_test$DON)
   
@@ -394,13 +394,7 @@ for (tt in c(1:5)){
     
     M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
     M2_test[,i]<-(M2_test[,i]-min_train)/(max_train-min_train)
-    
-    sd_train<-sd(M2_train[,i])
-    mean_train<-mean(M2_train[,i])
-    
-    M2_train[,i]<-(M2_train[,i]-mean_train)/sd_train
-    M2_test[,i]<-(M2_test[,i]-mean_train)/sd_train
-    
+
   }
   
   set.seed(seeds)
@@ -475,12 +469,12 @@ for (tt in c(1:5)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
 
-  sing_acc<-data.frame(pp,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
   print(a2)
   print(all_results)
  
-}}
+}
 print(summary(all_results))
