@@ -400,16 +400,16 @@ for (tt in c(1:10)){
   for(i in c("Distance_GWC","slope","s2")){
     
     min_train<-min(M2_train[,i])
-    <-max(M2_train[,i])
+    max_train<-max(M2_train[,i])
     
-    M2_train[,i]<-(M2_train[,i]-max_train)/(max_train-min_train)
-    M2_test[,i]<-(M2_test[,i]-max_train)/(max_train-min_train)
+    M2_train[,i]<-(max_train-M2_train[,i])/(max_train-min_train)
+    M2_test[,i]<-(max_train-M2_test[,i])/(max_train-min_train)
 
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7,9,10)]
-  WP2Test<-M2_test[,-c(4,6,7,9,10)]
+  WP2Train<-M2_train[,-c(4,6,7,10)]
+  WP2Test<-M2_test[,-c(4,6,7,10)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
