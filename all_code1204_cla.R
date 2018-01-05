@@ -287,12 +287,13 @@ a1=1.0
 a2=2.0
 all_results<-data.frame()
 
-for (tt in c(1:10)){
+for (tt in c(1:5)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  for (pp in c(0.65,0.7,0.75,0.8,0.85,0.9))
+  trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -474,7 +475,7 @@ for (tt in c(1:10)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
 
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
+  sing_acc<-data.frame(pp,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
@@ -482,5 +483,5 @@ for (tt in c(1:10)){
   print(all_results)
  
 }
-
+}
 print(summary(all_results))
