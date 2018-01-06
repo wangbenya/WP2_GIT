@@ -235,9 +235,7 @@ newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
-
-all_points[all_points$DON==0.25,"DON"]=0.5
-
+all_points<-subset(all_points,all_points$DON>0.25)
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
@@ -251,7 +249,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,200,20)),
-  makeIntegerParam("nodesize", lower = 65, upper = 70),
+  makeIntegerParam("nodesize", lower = 20, upper = 30),
   makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -294,7 +292,7 @@ for (tt in c(1:10)){
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.85, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.7, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
