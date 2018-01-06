@@ -230,12 +230,12 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=5,"type"]=1
-newdata[newdata$dev>5,"type"]=0
+newdata[newdata$dev<=3,"type"]=1
+newdata[newdata$dev>3,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
-all_points<-subset(all_points,all_points$DON>0.25)
+
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
@@ -249,7 +249,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,200,20)),
-  makeIntegerParam("nodesize", lower = 20, upper = 30),
+  makeIntegerParam("nodesize", lower = 65, upper = 70),
   makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
