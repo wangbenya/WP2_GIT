@@ -235,6 +235,7 @@ newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
+
 all_points[all_points$DON==0.25,"DON"]=1
 
 ## set the parameters for mlr
@@ -450,8 +451,8 @@ for (tt in c(1:10)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
-  names(kriging_nutrietn_DOC) <- c("DOC_k")
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
+  names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
   
   ## extract the data from landscapes
   landscape_train_withKN <- raster::extract(kriging_nutrietn_DOC,training_df)
