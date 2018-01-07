@@ -481,7 +481,7 @@ for (tt in c(1:30)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
 
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
