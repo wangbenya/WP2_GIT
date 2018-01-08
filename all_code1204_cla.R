@@ -237,7 +237,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=1
+all_points[all_points$DON==0.25,"DON"]=0.15
 
 ## set the parameters for mlr
 seed=35
@@ -286,11 +286,11 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.5
-a2=2.5
+a1=1.0
+a2=2.0
 all_results<-data.frame()
 
-for (tt in c(1:10)){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
