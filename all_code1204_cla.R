@@ -205,7 +205,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-for(aaaa in seq(0.05,0.25,0.05)){
+for(aaaa in seq(0.00,0.25,0.05)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
