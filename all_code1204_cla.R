@@ -410,8 +410,8 @@ for (tt in c(1:20)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7,10)]
-  WP2Test<-M2_test[,-c(4,6,7,10)]
+  WP2Train<-M2_train[,-c(4,6,7,9,10)]
+  WP2Test<-M2_test[,-c(4,6,7,9,10)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
