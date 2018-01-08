@@ -236,8 +236,6 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=1
-
 ## set the parameters for mlr
 seed=35
 set.seed(seed)
