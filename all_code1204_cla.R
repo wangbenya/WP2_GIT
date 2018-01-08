@@ -289,8 +289,8 @@ a1=1.0
 a2=2.0
 all_results<-data.frame()
 
-for (tt in c(1:50)){
-  print(tt)
+for (tt in c(1:20)){
+  print(tt+30)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
