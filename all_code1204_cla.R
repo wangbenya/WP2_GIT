@@ -205,7 +205,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-for(aaaa in seq(0.05,0.25,0.05)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -238,7 +237,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=aaaa
+all_points[all_points$DON==0.25,"DON"]=1
 
 ## set the parameters for mlr
 seed=35
@@ -287,8 +286,8 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.0
-a2=2.0
+a1=1.5
+a2=2.5
 all_results<-data.frame()
 
 for (tt in c(1:10)){
@@ -489,7 +488,7 @@ for (tt in c(1:10)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
 
-  sing_acc<-data.frame(aaaa,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
@@ -498,5 +497,3 @@ for (tt in c(1:10)){
  
 }
 print(summary(all_results))
-
-}
