@@ -236,7 +236,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=1
+#all_points[all_points$DON==0.25,"DON"]=0.75
 
 ## set the parameters for mlr
 seed=35
@@ -465,7 +465,7 @@ for (tt in c(1:20)){
   M4_test_withKN <- cbind(WP2Test,as.data.frame(landscape_test_withKN))
   
   names(M4_train_withKN)<-names(M4_test_withKN)
-  
+
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
 
