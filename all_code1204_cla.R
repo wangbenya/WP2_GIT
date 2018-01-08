@@ -236,7 +236,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=0.75
+all_points[all_points$DON==0.25,"DON"]=1
 
 ## set the parameters for mlr
 seed=35
@@ -410,8 +410,8 @@ for (tt in c(1:20)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7,9,10)]
-  WP2Test<-M2_test[,-c(4,6,7,9,10)]
+  WP2Train<-M2_train[,-c(4,6,7,10)]
+  WP2Test<-M2_test[,-c(4,6,7,10)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
@@ -466,6 +466,9 @@ for (tt in c(1:20)){
   
   names(M4_train_withKN)<-names(M4_test_withKN)
   
+  M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
+  M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
+
   ## create the training and testing sets 
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC
   set.seed(seeds)
