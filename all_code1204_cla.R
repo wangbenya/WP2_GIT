@@ -469,6 +469,9 @@ for (tt in c(1:20)){
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
 
+  M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
+  M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
+
   ## create the training and testing sets 
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC
   set.seed(seeds)
