@@ -205,7 +205,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-for (aaa in seq(0.05,0.4,0.05)){
+#for (aaa in seq(0.05,0.4,0.05)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -238,7 +238,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=aaa
+#all_points[all_points$DON==0.25,"DON"]=aaa
 
 ## set the parameters for mlr
 seed=35
@@ -453,8 +453,11 @@ for (tt in c(1:10)){
   values(dat.krg_DOC) <- 10 ^ (values(dat.krg_DOC))
   
   ## create rasterstack with kriging data
-  kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
-  names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
+  #kriging_nutrietn_DOC<-stack(dat.krg_DOC,dat.krg_DON)
+  #names(kriging_nutrietn_DOC) <- c("DOC_k","DON_k")
+  
+  kriging_nutrietn_DOC<-stack(dat.krg_DOC)
+  names(kriging_nutrietn_DOC) <- c("DOC_k")
   
   ## extract the data from landscapes
   landscape_train_withKN <- raster::extract(kriging_nutrietn_DOC,training_df)
@@ -471,8 +474,8 @@ for (tt in c(1:10)){
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
 
-  M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
-  M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
+  #M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
+ # M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
 
   ## create the training and testing sets 
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC
@@ -489,7 +492,7 @@ for (tt in c(1:10)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
 
-  sing_acc<-data.frame(aaa,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(a1)
@@ -498,4 +501,3 @@ for (tt in c(1:10)){
  
 }
 print(summary(all_results))
-}
