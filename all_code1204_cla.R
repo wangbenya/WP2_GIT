@@ -238,7 +238,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=0.4
+#all_points[all_points$DON==0.25,"DON"]=0.4
 
 ## set the parameters for mlr
 seed=35
@@ -253,7 +253,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,500,50)),
-  makeIntegerParam("nodesize", lower = 15, upper = 25),
+  makeIntegerParam("nodesize", lower = 50, upper = 55),
   makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -291,14 +291,14 @@ a1=1.0
 a2=2.0
 all_results<-data.frame()
 
-for (tt in c(1:10)){
+for (tt in seq(1,158,1)){
   print(tt)
-  seeds<-seed.list[tt]
+  seeds<-seed.list[1]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
-  training <- all_points[trainIndex,]
-  testing <- all_points[-trainIndex,]
+  #trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  training <- all_points[-c(tt),]
+  testing <- all_points[c(tt),]
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
@@ -474,8 +474,8 @@ for (tt in c(1:10)){
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_test_withKN$DOC_k<-log10(M4_test_withKN$DOC_k)
 
-  M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
-  M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
+ # M4_train_withKN$DON_k<-log10(M4_train_withKN$DON_k)
+ # M4_test_withKN$DON_k<-log10(M4_test_withKN$DON_k)
 
   ## create the training and testing sets 
   M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC
@@ -493,12 +493,11 @@ for (tt in c(1:10)){
   M4_kappa<-postResample(map4_predict$data$response,map4_predict$data$truth)[2]
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
-
+  
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
-  print(a1)
-  print(a2)
+  print(tt)
   print(all_results)
  
 }
