@@ -252,7 +252,7 @@ hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   
   all_hard['DON']=all_hard['DON']-1
   
-  all_hard['DON'<0,'DON']=0.25
+  all_hard[all_hard$DON<0,'DON']=0.25
 
   all_point<-rbind(all_hard,all_easy)
 
