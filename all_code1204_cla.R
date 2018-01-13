@@ -250,7 +250,7 @@ hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   all_hard$p="hard"
   all_easy$p="easy"
   
-  all_hard['DON']=all_hard['DON']-0.75
+  all_hard['DON']=all_hard['DON']-1
   
   all_hard['DON'<0,'DON']=0.25
 
