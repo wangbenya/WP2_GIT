@@ -480,7 +480,7 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=1
+all_points[all_points$DON==0.25,"DON"]=aaa
 
 
 ## set the parameters for mlr
@@ -530,8 +530,8 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.5
-a2=2.5
+a1=1.0
+a2=2.0
 
   training <- all_points 
   ## load the point data 
@@ -546,8 +546,9 @@ a2=2.5
   var.smpl1 <- variogram(f.1, training_df)
   plot(var.smpl1)
   # Compute the variogram model by passing the nugget, sill and range value
-  dat.fit1 <- fit.variogram(var.smpl1,fit.method = FALSE,fit.sills = FALSE,fit.ranges = FALSE
-                            ,vgm(model = "Sph",range = 5000,psill = 0.12,nugget = 0.05))
+ # dat.fit1 <- fit.variogram(var.smpl1,fit.method = FALSE,fit.sills = FALSE,fit.ranges = FALSE
+  #                          ,vgm(model = "Sph",range = 5000,psill = 0.12,nugget = 0.05))
+  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp")))
   
   plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
@@ -569,7 +570,7 @@ a2=2.5
   
   
   #Now make the map
-  ggplot(data = map1_df, aes(y = Latitude, x = Longitude)) +
+  p11<-ggplot(data = map1_df, aes(y = Latitude, x = Longitude)) +
     geom_raster(aes(fill = as.factor(DON))) + theme_bw() +
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
@@ -577,8 +578,8 @@ a2=2.5
                       name = "DON concentration",
                       breaks = c( "High","Medium", "Low"),
                       labels = c("High","Medium", "Low"))
-  
-  
+  plot(p11)
+   
   #convert the raster to points for plotting
   map1_df2 <- rasterToPoints(DON_map1_2) %>% data.frame(.)
   #Make the points a dataframe for ggplot
@@ -591,7 +592,6 @@ a2=2.5
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())
     scale_fill_gradientn(colours = c("#B8B8B8", "#FFD700", "#FF3030"),breaks=c(0,1,2,3,4,5),limits=c(0,4))
-  
   
   a=700
   b=1400

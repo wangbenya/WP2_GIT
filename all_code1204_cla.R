@@ -238,7 +238,20 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-#all_points[all_points$DON==0.25,"DON"]=0.4
+hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
+  hard_points<-subset(hard_points,hard_points$M2_ACC==0) %>%
+    subset(.,.["M4_ACC"]==0) %>%
+    subset(.,.['M1_ACC']==0)
+  
+  index=hard_points$index
+  all_hard=all_points[index,]
+  all_easy=all_points[-index,]
+  
+  all_hard$p="hard"
+  all_easy$p="easy"
+  
+  all_hard['DON']=all_hard['DON']-0.5
+  all_point<-rbind(all_hard,all_easy)
 
 ## set the parameters for mlr
 seed=35
@@ -291,14 +304,14 @@ a1=1.0
 a2=2.0
 all_results<-data.frame()
 
-for (tt in seq(1,158,1)){
+for (tt in c(1:10)){
   print(tt)
-  seeds<-seed.list[1]
+  seeds<-seed.list[tt]
   set.seed(seeds)
 
-  #trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
-  training <- all_points[-c(tt),]
-  testing <- all_points[c(tt),]
+  trainIndex <- createDataPartition(all_points$DON, p = 0.8, list = FALSE)  
+  training <- all_points[trainIndex,]
+  testing <- all_points[-trainIndex,]
   
   ## load the point data 
   training_df <- read_pointDataframes(training)
@@ -497,7 +510,6 @@ for (tt in seq(1,158,1)){
   sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
-  print(tt)
   print(all_results)
  
 }
