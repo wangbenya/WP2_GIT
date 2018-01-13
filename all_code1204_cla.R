@@ -205,7 +205,7 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
-#for (aaa in seq(0.05,0.4,0.05)){
+for (aa in seq(0.2,1,0.1)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -250,7 +250,7 @@ hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   all_hard$p="hard"
   all_easy$p="easy"
   
-  all_hard['DON']=all_hard['DON']-1
+  all_hard['DON']=all_hard['DON']-aa
   
   all_hard[all_hard$DON<0,'DON']=0.25
 
@@ -510,10 +510,11 @@ for (tt in c(1:10)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(aa,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
 }
 print(summary(all_results))
+}
