@@ -239,9 +239,10 @@ all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
 hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
-  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
-    subset(.,.["M2_ACC"]==0) %>%
   
+  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
+    subset(.,.["M2_ACC"]==0) 
+    
   index=hard_points$index
   all_hard=all_points[index,]
   all_easy=all_points[-index,]
@@ -253,7 +254,7 @@ hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   
   all_hard[all_hard$DON<0,'DON']=0.25
 
-  all_point<-rbind(all_hard,all_easy)
+  all_points<-rbind(all_hard,all_easy)
 
 ## set the parameters for mlr
 seed=35
