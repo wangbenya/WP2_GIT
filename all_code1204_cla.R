@@ -242,7 +242,7 @@ hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   
   hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
     subset(.,.["M2_ACC"]==0) 
-    
+
   index=hard_points$index
   all_hard=all_points[index,]
   all_easy=all_points[-index,]
@@ -305,7 +305,8 @@ model_build2 <- function(dataset, n_target) {
 
 a1=1.0
 a2=2.0
-all_results<-data.frame()
+
+#all_results<-data.frame()
 
 for (tt in c(1:10)){
   print(tt)
