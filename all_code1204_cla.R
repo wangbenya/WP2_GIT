@@ -239,9 +239,8 @@ all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
 hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
-  hard_points<-subset(hard_points,hard_points$M2_ACC==0) %>%
-    subset(.,.["M4_ACC"]==0) %>%
-    subset(.,.['M1_ACC']==0)
+  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
+    subset(.,.["M2_ACC"]==0) %>%
   
   index=hard_points$index
   all_hard=all_points[index,]
