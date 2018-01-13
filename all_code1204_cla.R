@@ -205,6 +205,9 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 
 ## load the data 
 set.seed(666)
+
+all_results<-data.frame()
+
 for (aa in seq(0.2,1,0.1)){
 
 seed.list<-sample(1:1000,300,replace =F)
@@ -306,7 +309,6 @@ model_build2 <- function(dataset, n_target) {
 a1=1.0
 a2=2.0
 
-#all_results<-data.frame()
 
 for (tt in c(1:10)){
   print(tt)
