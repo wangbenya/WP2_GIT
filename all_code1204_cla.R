@@ -208,7 +208,8 @@ set.seed(666)
 
 all_results<-data.frame()
 
-#for (aa in seq(0.2,1,0.1)){
+for (aa in c(0.5,0.6,0.8,1.0)){
+  for (bb in c(0.2,0.3,0.4)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -255,7 +256,7 @@ all_points<-subset(all_points,all_points$type==1)
   
   #all_hard['DON']=all_hard['DON']-aa
   
-  all_points[all_points$DON<0.5,'DON']=0.5
+  all_points[all_points$DON<aa,'DON']=bb
 
   #all_points<-rbind(all_hard,all_easy)
 
@@ -310,7 +311,7 @@ a1=1.0
 a2=2.0
 
 
-for (tt in c(1:15)){
+for (tt in c(1:3)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -513,11 +514,11 @@ for (tt in c(1:15)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   
-  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(aa,bb,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
 }
 print(summary(all_results))
-#}
+}
