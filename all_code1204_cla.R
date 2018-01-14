@@ -241,23 +241,23 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
+#hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   
-  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
-    subset(.,.["M2_ACC"]==0) 
+  #hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
+   # subset(.,.["M2_ACC"]==0) 
 
-  index=hard_points$index
-  all_hard=all_points[index,]
-  all_easy=all_points[-index,]
+  #index=hard_points$index
+  #all_hard=all_points[index,]
+  #all_easy=all_points[-index,]
   
-  all_hard$p="hard"
-  all_easy$p="easy"
+  #all_hard$p="hard"
+  #all_easy$p="easy"
   
-  all_hard['DON']=all_hard['DON']-0.5
+  #all_hard['DON']=all_hard['DON']-aa
   
-  all_hard[all_hard$DON<0,'DON']=0.25
+  all_points[all_points$DON<0.5,'DON']=0.5
 
-  all_points<-rbind(all_hard,all_easy)
+  #all_points<-rbind(all_hard,all_easy)
 
 ## set the parameters for mlr
 seed=35
@@ -272,8 +272,8 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,500,50)),
-  makeIntegerParam("nodesize", lower = 20, upper = 25),
-  makeIntegerParam("mtry", lower = 4, upper =6)
+  makeIntegerParam("nodesize", lower = 50, upper = 55),
+  makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
 
@@ -306,8 +306,8 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=0.5
-a2=1.5
+a1=1.0
+a2=2.0
 
 
 for (tt in c(1:15)){
