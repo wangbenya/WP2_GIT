@@ -208,8 +208,8 @@ set.seed(666)
 
 all_results<-data.frame()
 
-for (aa in c(0.5,0.6,0.8,1.0)){
-  for (bb in c(0.2,0.3,0.4)){
+for (aa in c(0.5,0.6,0.8,1.0)) {
+  for (bb in c(0.2,0.3,0.4)) {
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -521,4 +521,4 @@ for (tt in c(1:3)){
  
 }
 print(summary(all_results))
-}
+}}
