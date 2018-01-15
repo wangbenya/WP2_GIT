@@ -208,7 +208,7 @@ set.seed(666)
 
 all_results<-data.frame()
  
- for (aa in seq(0.5,1.0,0.05)){
+ for (aa in c(0.6,0.85)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -298,10 +298,10 @@ model_build2 <- function(dataset, n_target) {
 }
 
 a1=0.5
-a2=2.0
+a2=1.5
 
 
-for (tt in c(1:5)){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
