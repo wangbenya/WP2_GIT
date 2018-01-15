@@ -233,8 +233,8 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=5,"type"]=1
-newdata[newdata$dev>5,"type"]=0
+newdata[newdata$dev<=10,"type"]=1
+newdata[newdata$dev>10,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
@@ -419,8 +419,8 @@ for (tt in c(1:5)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,7)]
-  WP2Test<-M2_test[,-c(4,7)]
+  WP2Train<-M2_train[,-c(4,6,7)]
+  WP2Test<-M2_test[,-c(4,6,7)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
