@@ -298,7 +298,7 @@ model_build2 <- function(dataset, n_target) {
 a1=0.5
 a2=2.0
 
-for (tt in c(1:30)){
+for (tt in c(1:5)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -419,8 +419,8 @@ for (tt in c(1:30)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7)]
-  WP2Test<-M2_test[,-c(4,6,7)]
+  WP2Train<-M2_train[,-c(4,7)]
+  WP2Test<-M2_test[,-c(4,7)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
