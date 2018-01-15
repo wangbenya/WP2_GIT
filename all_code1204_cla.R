@@ -208,8 +208,6 @@ set.seed(666)
 
 all_results<-data.frame()
 
-for (aa in c(0.7,0.8,0.9,1.0)) {
-  for (bb in c(0.2,0.3,0.4)) {
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -241,24 +239,9 @@ newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
+all_points<-subset(all_points,all_points$Collect_Year==2016)
 
-hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
-  
-  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
-    subset(.,.["M2_ACC"]==0) 
 
-  index=hard_points$index
-  all_hard=all_points[index,]
-  all_easy=all_points[-index,]
-  
-  all_hard$p="hard"
-  all_easy$p="easy"
-  
-  all_hard['DON']=all_hard['DON']-aa
-  
-  all_hard[all_hard$DON<aa,'DON']=bb
-
-  all_points<-rbind(all_hard,all_easy)
 
 ## set the parameters for mlr
 seed=35
@@ -514,11 +497,10 @@ for (tt in c(1:3)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   
-  sing_acc<-data.frame(aa,bb,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
 }
 print(summary(all_results))
-}}
