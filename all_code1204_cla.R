@@ -239,7 +239,7 @@ newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
-all_points<-subset(all_points,all_points$Collect_Year==2016)
+all_points<-subset(all_points,all_points$Collect_Year!=2016)
 
 
 ## set the parameters for mlr
