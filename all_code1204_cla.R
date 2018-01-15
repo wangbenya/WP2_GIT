@@ -239,8 +239,15 @@ newdata[newdata$dev>5,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
-all_points<-subset(all_points,all_points$Collect_Year!=2016)
 
+all_old<-subset(all_points,all_points$Collect_Year!=2016)
+all_new<-subset(all_points,all_points$Collect_Year==2016)
+
+all_new['DON']=all_new['DON']-0.5
+
+all_new[all_new$DON<0,'DON']=0.25
+
+all_points<-rbind(all_old,all_new)
 
 ## set the parameters for mlr
 seed=35
