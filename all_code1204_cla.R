@@ -298,7 +298,7 @@ model_build2 <- function(dataset, n_target) {
 a1=0.5
 a2=2.0
 
-for (tt in c(1:5)){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
