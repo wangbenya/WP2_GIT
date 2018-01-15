@@ -207,8 +207,6 @@ names(landscapes) <- c("Soil", "Veg", "Landuse","Catchment", "GW_depth", "Distan
 set.seed(666)
 
 all_results<-data.frame()
- 
- for (aa in seq(0.7,1.0,0.05)){
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -244,7 +242,7 @@ all_points<-subset(all_points,all_points$type==1)
 all_old<-subset(all_points,all_points$Collect_Year!=2016)
 all_new<-subset(all_points,all_points$Collect_Year==2016)
 
-all_new['DON']=all_new['DON']-aa
+all_new['DON']=all_new['DON']-0.95
 
 all_new[all_new$DON<0.25,'DON']=0.25
 
@@ -422,8 +420,8 @@ for (tt in c(1:5)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6,7,10)]
-  WP2Test<-M2_test[,-c(4,6,7,10)]
+  WP2Train<-M2_train[,-c(4,6,7)]
+  WP2Test<-M2_test[,-c(4,6,7)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
@@ -504,11 +502,13 @@ for (tt in c(1:5)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   
-  sing_acc<-data.frame(aa,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
 }
 print(summary(all_results))
-}
+
+
+
