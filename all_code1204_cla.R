@@ -208,10 +208,6 @@ set.seed(666)
 
 all_results<-data.frame()
 
-
-  for (aa in seq(0.5,1.0,0.1)) {
-    for (bb in seq(0.2,0.6,0.1)) {
-  
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
 extra_n<-read.csv("~/WP2/data/extra_n.csv",header = T)
@@ -246,9 +242,9 @@ all_points<-subset(all_points,all_points$type==1)
 all_old<-subset(all_points,all_points$Collect_Year!=2016)
 all_new<-subset(all_points,all_points$Collect_Year==2016)
 
-all_new['DON']=all_new['DON']-aa
+all_new['DON']=all_new['DON']-0.75
 
-all_new[all_new$DON<0,'DON']=bb
+all_new[all_new$DON<0,'DON']=0.25
 
 all_points<-rbind(all_old,all_new)
 
@@ -299,11 +295,11 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.0
-a2=2.0
+a1=0.5
+a2=1.5
 
 
-for (tt in c(1:3)){
+for (tt in c(1:5)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
@@ -513,5 +509,3 @@ for (tt in c(1:3)){
  
 }
 print(summary(all_results))
-
-}}
