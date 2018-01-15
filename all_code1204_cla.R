@@ -246,7 +246,7 @@ all_new<-subset(all_points,all_points$Collect_Year==2016)
 
 all_new['DON']=all_new['DON']-aa
 
-all_new[all_new$DON<0,'DON']=0.25
+all_new[all_new$DON<0.25,'DON']=0.25
 
 all_points<-rbind(all_old,all_new)
 
@@ -298,7 +298,7 @@ model_build2 <- function(dataset, n_target) {
 }
 
 a1=0.5
-a2=2
+a2=1.5
 
 
 for (tt in c(1:5)){
