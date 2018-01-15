@@ -209,7 +209,7 @@ set.seed(666)
 all_results<-data.frame()
 
 for (aa in c(0.7,0.8,0.9,1.0)) {
-  for (bb in c(0.2,0.3,0.4,0.5)) {
+  for (bb in c(0.2,0.3,0.4)) {
 
 seed.list<-sample(1:1000,300,replace =F)
 all_points<-read.csv("~/WP2/data/all_data1127.csv",header = T)
@@ -242,23 +242,23 @@ newdata[newdata$dev>5,"type"]=0
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-#hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
+hard_points=read.csv("~/WP2/results/hard_points.csv",header=T)
   
-  #hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
-   # subset(.,.["M2_ACC"]==0) 
+  hard_points<-subset(hard_points,hard_points$M4_ACC==0) %>%
+    subset(.,.["M2_ACC"]==0) 
 
-  #index=hard_points$index
-  #all_hard=all_points[index,]
-  #all_easy=all_points[-index,]
+  index=hard_points$index
+  all_hard=all_points[index,]
+  all_easy=all_points[-index,]
   
-  #all_hard$p="hard"
-  #all_easy$p="easy"
+  all_hard$p="hard"
+  all_easy$p="easy"
   
-  #all_hard['DON']=all_hard['DON']-aa
+  all_hard['DON']=all_hard['DON']-aa
   
-  all_points[all_points$DON<aa,'DON']=bb
+  all_hard[all_hard$DON<aa,'DON']=bb
 
-  #all_points<-rbind(all_hard,all_easy)
+  all_points<-rbind(all_hard,all_easy)
 
 ## set the parameters for mlr
 seed=35
@@ -311,7 +311,7 @@ a1=1.0
 a2=2.0
 
 
-for (tt in c(1:5)){
+for (tt in c(1:3)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
