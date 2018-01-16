@@ -398,25 +398,25 @@ for (tt in c(1:30)){
 #  M2_train$DON<-log10(M2_train$DON)
 #  M2_test$DON<-log10(M2_test$DON)
   
-  for(i in c("GW_depth","Distance","s1")) {
+  #for(i in c("GW_depth","Distance","s1")) {
     
-    min_train<-min(M2_train[,i])
-    max_train<-max(M2_train[,i])
+   # min_train<-min(M2_train[,i])
+   # max_train<-max(M2_train[,i])
     
-    M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
-    M2_test[,i]<-(M2_test[,i]-min_train)/(max_train-min_train)
+   # M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
+   # M2_test[,i]<-(M2_test[,i]-min_train)/(max_train-min_train)
 
-  }
+ # }
   
-  for(i in c("Distance_GWC","slope","aspect","s2")){
+  #for(i in c("Distance_GWC","slope","aspect","s2")){
     
-    min_train<-min(M2_train[,i])
-    max_train<-max(M2_train[,i])
+  #  min_train<-min(M2_train[,i])
+  #  max_train<-max(M2_train[,i])
     
-    M2_train[,i]<-(max_train-M2_train[,i])/(max_train-min_train)
-    M2_test[,i]<-(max_train-M2_test[,i])/(max_train-min_train)
+   # M2_train[,i]<-(max_train-M2_train[,i])/(max_train-min_train)
+   # M2_test[,i]<-(max_train-M2_test[,i])/(max_train-min_train)
 
-  }
+  #}
 
   set.seed(seeds)
   WP2Train<-M2_train[,-c(4,6,7)]
