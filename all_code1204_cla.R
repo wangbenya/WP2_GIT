@@ -408,7 +408,7 @@ for (tt in c(1:30)){
 
   }
   
-  for(i in c("Distance_GWC","slope","s2")){
+  for(i in c("Distance_GWC","slope","aspect","s2")){
     
     min_train<-min(M2_train[,i])
     max_train<-max(M2_train[,i])
@@ -419,8 +419,8 @@ for (tt in c(1:30)){
   }
 
   set.seed(seeds)
-  WP2Train<-M2_train[,-c(4,6)]
-  WP2Test<-M2_test[,-c(4,6)]
+  WP2Train<-M2_train[,-c(4,6,7)]
+  WP2Test<-M2_test[,-c(4,6,7)]
   
   rf_DON_m2 <- model_build2(WP2Train,"DON")
   
