@@ -298,14 +298,13 @@ model_build2 <- function(dataset, n_target) {
 a1=0.5
 a2=2.0
 
-for (pp in seq(0.7,0.9,0.05)){
 
-for (tt in c(1:8)){
+for (tt in c(1:30)){
   print(tt)
   seeds<-seed.list[tt]
   set.seed(seeds)
 
-  trainIndex <- createDataPartition(all_points$DON, p = pp, list = FALSE)  
+  trainIndex <- createDataPartition(all_points$DON, p = 0.75, list = FALSE)  
   training <- all_points[trainIndex,]
   testing <- all_points[-trainIndex,]
   
@@ -503,13 +502,11 @@ for (tt in c(1:8)){
   
   M4_ACC_train<-postResample(map4_train$data$response,map4_train$data$truth)[1]
   
-  sing_acc<-data.frame(pp,M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
+  sing_acc<-data.frame(M1_ACC,M2_ACC,M4_ACC,M1_ACC_train,M2_ACC_train,M4_ACC_train,M1_kappa,M2_kappa,M4_kappa)
   
   all_results<-rbind(all_results,sing_acc)
   print(all_results)
  
 }
 print(summary(all_results))
-
-}
 
