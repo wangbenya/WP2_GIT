@@ -242,9 +242,10 @@ all_points<-subset(all_points,all_points$type==1)
 all_old<-subset(all_points,all_points$Collect_Year!=2016)
 all_new<-subset(all_points,all_points$Collect_Year==2016)
 
-all_new['DON']=all_new['DON']-0.95
+#all_new['DON']=all_new['DON']-0.95
+#all_new[all_new$DON<0.25,'DON']=0.25
 
-all_new[all_new$DON<0.25,'DON']=0.25
+all_old['DON']=all_old['DON']+0.5
 
 all_points<-rbind(all_old,all_new)
 
