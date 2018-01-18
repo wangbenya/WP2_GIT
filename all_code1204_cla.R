@@ -296,7 +296,7 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.0
+a1=0.5
 a2=2.0
 
 

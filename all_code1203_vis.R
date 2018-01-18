@@ -474,14 +474,27 @@ newdata$DON_m3<-(newdata$DON.1+newdata$DON.2+newdata$DON.3)/3
 
 newdata$dev<-abs(newdata$DON-newdata$DON_m3)/newdata$DON_m3
 
-newdata[newdata$dev<=5,"type"]=1
-newdata[newdata$dev>5,"type"]=0
+newdata[newdata$dev<=10,"type"]=1
+newdata[newdata$dev>10,"type"]=0
 
 all_points<-data.frame(newdata)
 all_points<-subset(all_points,all_points$type==1)
 
-all_points[all_points$DON==0.25,"DON"]=aaa
+#all_points[all_points$DON==0.25,"DON"]=aaa
+all_new<-all_points[all_points$Collect_Year==2016,]
+all_old<-all_points[all_points$Collect_Year!=2016,]
 
+all_new['DON']=all_new['DON']-0.95
+
+all_new[all_new$DON<0.25,'DON']=0.25
+
+#plot(ggplot(data=all_new,aes(x=all_new$DON))+geom_density()+xlim(0,5))
+#plot(ggplot(data=all_old,aes(x=all_old$DON))+geom_density()+xlim(0,5))
+
+all_new$p="new"
+all_old$p="old"
+
+all_points<-rbind(all_new,all_old)
 
 ## set the parameters for mlr
 seed=35
@@ -496,7 +509,7 @@ rdesc = makeResampleDesc("CV", iters = 5)
 ## define the parameter spaces for RF      
 para_rf = makeParamSet(
   makeDiscreteParam("ntree", values=seq(50,500,50)),
-  makeIntegerParam("nodesize", lower = 60, upper = 65),
+  makeIntegerParam("nodesize", lower = 50, upper = 55),
   makeIntegerParam("mtry", lower = 2, upper =3)
   #  makeDiscreteParam("coefReg", values=seq(0.05,0.2,0.05))
 )
@@ -530,10 +543,11 @@ model_build2 <- function(dataset, n_target) {
   return(rf)
 }
 
-a1=1.0
-a2=2.0
 
-  training <- all_points 
+a1=0.5
+a2=1.5
+
+  training <- all_point4
   ## load the point data 
   training_df <- read_pointDataframes(training)
   
@@ -548,7 +562,8 @@ a2=2.0
   # Compute the variogram model by passing the nugget, sill and range value
  # dat.fit1 <- fit.variogram(var.smpl1,fit.method = FALSE,fit.sills = FALSE,fit.ranges = FALSE
   #                          ,vgm(model = "Sph",range = 5000,psill = 0.12,nugget = 0.05))
-  dat.fit1 <- fit.variogram(var.smpl1,vgm(c("Sph","Exp")))
+  
+  dat.fit1 <- fit.variogram(var.smpl1,fit.sills = FALSE,fit.ranges = FALSE,fit.method = FALSE,vgm(model = 'Sph',range = 8500,nugget = 0.03,psill = 0.13))
   
   plot(var.smpl1,dat.fit1)
   # Perform the krige interpolation (note the use of the variogram model
@@ -577,9 +592,9 @@ a2=2.0
     scale_fill_manual(values = c("#B8B8B8", "#FFD700", "#FF3030"),
                       name = "DON concentration",
                       breaks = c( "High","Medium", "Low"),
-                      labels = c("High","Medium", "Low"))
+                      labels = c("High","Medium", "Low"))+labs(x=as.character(a1),y=ranges)
   plot(p11)
-   
+  
   #convert the raster to points for plotting
   map1_df2 <- rasterToPoints(DON_map1_2) %>% data.frame(.)
   #Make the points a dataframe for ggplot
@@ -708,20 +723,20 @@ a2=2.0
   
   for(i in c("GW_depth","s1")) {
     
-    min_train<-min(M2_train[,i])
-    max_train<-max(M2_train[,i])
+    min_train<-min(WP2Train[,i])
+    max_train<-max(WP2Train[,i])
     
-    M2_train[,i]<-(M2_train[,i]-min_train)/(max_train-min_train)
+    WP2Train[,i]<-(WP2Train[,i]-min_train)/(max_train-min_train)
     M2_map_data[,i]<-(M2_map_data[,i]-min_train)/(max_train-min_train)
     
   }
   
   for(i in c("Distance_GWC","slope","s2")){
     
-    min_train<-min(M2_train[,i])
-    max_train<-max(M2_train[,i])
+    min_train<-min(WP2Train[,i])
+    max_train<-max(WP2Train[,i])
     
-    M2_train[,i]<-(max_train-M2_train[,i])/(max_train-min_train)
+    WP2Train[,i]<-(max_train-WP2Train[,i])/(max_train-min_train)
     M2_map_data[,i]<-(max_train-M2_map_data[,i])/(max_train-min_train)
     
   }
@@ -757,8 +772,8 @@ a2=2.0
   #Make appropriate column headings
   colnames(map2_df) <- c("Longitude", "Latitude", "DON")
   t=3
-  map2_df[, t][map2_df[, t] <=a1] <- "Low"
-  map2_df[, t][map2_df[, t] < a2] <- "Medium"
+  map2_df[, t][map2_df[, t] ==1] <- "Low"
+  map2_df[, t][map2_df[, t] ==2 ] <- "Medium"
   map2_df[, t][(map2_df[, t] != "Low") & (map2_df[, t] != "Medium")] <- "High"
   map2_df[, t] <- factor(map2_df[, t], levels = c("Low", "Medium", "High"))
   
@@ -803,6 +818,9 @@ a2=2.0
   #M4_test_withKN$DOC_dep<-M4_test_withKN$GW_depth*M4_test_withKN$DOC_k
   M4_train_withKN$DOC_k<-log10(M4_train_withKN$DOC_k)
   M4_train_all$DOC_k<-log10(M4_train_all$DOC_k)
+  
+  M4_train_withKN$DOC_dep<-M4_train_withKN$GW_depth*M4_train_withKN$DOC
+  M4_train_all$DOC_dep<-M4_train_all$GW_depth*M4_train_all$DOC
   
   set.seed(666)
   rf_DON_m4<-model_build2(M4_train_withKN,"DON")
@@ -873,3 +891,13 @@ a2=2.0
     coord_equal() +
     theme(panel.grid = element_blank(), legend.position = "right", legend.key = element_blank())+
     scale_fill_gradientn(colours = terrain.colors(5),limits=c(0,60000))
+
+  
+  all_resuts<-read.csv("D:/Cloud/WP2/results/all_results0115.csv",header=T)
+  
+  summary(all_resuts[((all_resuts$aa==0.6) & (all_resuts$bb==0.2)),])
+  
+  
+  
+  
+  
